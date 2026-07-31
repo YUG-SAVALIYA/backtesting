@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSI Supertrend — Trading Suite</title>
+    <style>
+        /* ── CRITICAL: force old inner containers visible inside new module panes ── */
+        #module-backtester #backtestView   { display: grid   !important; }
+        #module-datacollect #liveView      { display: block  !important; }
+        /* Remove max-width constraints so content fills the panel */
+        #module-backtester .container      { max-width: none !important; }
+        #module-datacollect .container     { max-width: none !important; }
+
+        :root{--bg-color:#0d1117;--panel-bg:#161b22;--border:#30363d;--text-main:#c9d1d9;--text-muted:#8b949e;--primary:#2f81f7;--primary-hover:#1f6feb;--success:#2ea043;--danger:#da3633;}
+        *{box-sizing:border-box;}
+        html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#0d1117;color:#c9d1d9;margin:0;padding:0;}
+        #appShell{display:flex;height:100vh;width:100vw;overflow:hidden;}
+        /* SIDEBAR */
+        #sidebar{width:220px;min-width:220px;background:#0d1117;border-right:1px solid #21262d;display:flex;flex-direction:column;transition:width .22s,min-width .22s;z-index:100;flex-shrink:0;}
+        #sidebar.collapsed{width:60px;min-width:60px;}
+        #sidebarHeader{display:flex;align-items:center;justify-content:space-between;padding:1rem .85rem;border-bottom:1px solid #21262d;min-height:60px;}
+        #sidebarLogo{display:flex;align-items:center;gap:.6rem;overflow:hidden;white-space:nowrap;}
+        #sidebarLogo .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#2f81f7,#ab71f8);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;box-shadow:0 0 12px rgba(47,129,247,.35);}
+        #sidebarLogo .logo-text{font-size:.78rem;font-weight:700;color:#fff;line-height:1.3;opacity:1;transition:opacity .15s;}
+        #sidebar.collapsed .logo-text{opacity:0;width:0;overflow:hidden;}
+        #sidebarToggle{background:transparent;border:none;color:#8b949e;cursor:pointer;padding:.3rem;border-radius:6px;display:flex;align-items:center;width:auto;margin:0;flex-shrink:0;transition:background .15s,color .15s;}
+        #sidebarToggle:hover{background:rgba(255,255,255,.07);color:#fff;}
+        #sidebarNav{list-style:none;padding:.75rem 0;flex:1;overflow-y:auto;margin:0;}
+        #sidebarNav li{display:flex;align-items:center;gap:.75rem;padding:.7rem .9rem;margin:.15rem .5rem;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;overflow:hidden;color:#8b949e;font-size:.88rem;font-weight:500;border-left:3px solid transparent;}
+        #sidebarNav li:hover{background:rgba(255,255,255,.06);color:#c9d1d9;}
+        #sidebarNav li.active{background:rgba(47,129,247,.12);color:#58a6ff;border-left-color:#2f81f7;}
+        #sidebarNav li.disabled{opacity:.38;cursor:not-allowed;pointer-events:none;}
+        .nav-icon{font-size:1.1rem;flex-shrink:0;width:20px;text-align:center;}
+        .nav-label{opacity:1;transition:opacity .15s;font-size:.85rem;}
+        #sidebar.collapsed .nav-label{opacity:0;width:0;overflow:hidden;}
+        .nav-badge{margin-left:auto;font-size:.6rem;background:rgba(255,255,255,.08);color:#8b949e;padding:.1rem .35rem;border-radius:20px;flex-shrink:0;}
+        #sidebar.collapsed .nav-badge{display:none;}
+        #sidebarFooter{padding:.6rem .9rem;border-top:1px solid #21262d;font-size:.68rem;color:#4a4f56;white-space:nowrap;overflow:hidden;}
+        /* MAIN */
+        #mainContent{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#0d1117;}
+        #topBar{height:48px;min-height:48px;background:#0d1117;border-bottom:1px solid #21262d;display:flex;align-items:center;padding:0 1.5rem;gap:.5rem;}
+        #topBarTitle{font-size:.9rem;font-weight:700;color:#fff;}
+        #topBarSubtitle{font-size:.72rem;color:#4a4f56;}
+        #topBarRight{margin-left:auto;display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:#4a4f56;}
+        #moduleArea{flex:1;overflow-y:auto;overflow-x:hidden;}
+        .module-pane{display:none;padding:1.5rem;min-height:100%;}
+        .module-pane.active{display:block;}
+        #module-datacollect.active,#module-portfolio.active{display:flex;}
+        #module-datacollect.active{flex-direction:column;padding:0;}
+        #module-portfolio.active{align-items:center;justify-content:center;padding:3rem;}
+        /* EXISTING INNER STYLES */
+        .container{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+        .panel{background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+        .full-width{grid-column:1/-1;}
+        .form-group{margin-bottom:1.25rem;}
+        .form-group label{display:block;margin-bottom:.5rem;font-weight:500;font-size:.9rem;}
+        .form-control{width:100%;background:#0d1117;border:1px solid var(--border);color:var(--text-main);padding:.5rem .75rem;border-radius:6px;font-size:.95rem;transition:border-color .2s;}
+        .form-control:focus{outline:none;border-color:var(--primary);}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+        button{width:100%;background:var(--success);color:#fff;border:none;padding:.75rem;font-size:1rem;font-weight:600;border-radius:6px;cursor:pointer;transition:background-color .2s;margin-top:1rem;}
+        button:hover{background:#238636;}
+        button:disabled{background:var(--border);cursor:not-allowed;color:var(--text-muted);}
+        .toggle-btn{background:transparent;border:1px solid var(--primary);color:var(--primary);padding:.35rem .75rem;font-size:.8rem;margin:0;width:auto;}
+        .toggle-btn:hover{background:rgba(88,166,255,.1);}
+        .results{margin-top:2rem;display:none;}
+        .metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:2rem;}
+        .metric-card{background:#0d1117;border:1px solid var(--border);border-radius:6px;padding:1rem;text-align:center;}
+        .metric-value{font-size:1.5rem;font-weight:700;color:var(--primary);margin-top:.5rem;}
+        table{width:100%;border-collapse:collapse;font-size:.9rem;}
+        th,td{padding:.75rem;text-align:left;border-bottom:1px solid var(--border);}
+        th{font-weight:600;color:var(--text-muted);background:rgba(255,255,255,.02);}
+        .status-win{color:var(--success);}.status-loss{color:var(--danger);}.status-expired{color:var(--text-muted);}
+        .loader{display:none;border:3px solid rgba(255,255,255,.1);border-radius:50%;border-top:3px solid var(--primary);width:24px;height:24px;animation:spin 1s linear infinite;margin:0 auto;}
+        @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes pulse{0%,100%{box-shadow:0 0 8px rgba(22,163,74,.5);}50%{box-shadow:0 0 20px rgba(22,163,74,.9);}}
+        @keyframes shimmer{0%{background-position:0% 0%;}100%{background-position:200% 0%;}}
+        #liveScannerPanel{background:linear-gradient(135deg,rgba(22,27,34,.95) 0%,rgba(13,17,23,.98) 100%);border:1px solid rgba(47,129,247,.18);border-radius:16px;padding:1.75rem;box-shadow:0 8px 32px rgba(0,0,0,.4);position:relative;overflow:hidden;}
+        #liveScannerPanel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2f81f7,#58a6ff,#ab71f8,#2f81f7);background-size:200% 100%;animation:shimmer 3s linear infinite;}
+        .scanner-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,255,255,.06);}
+        .scanner-title{margin:0;font-size:1.15rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:.6rem;}
+        #btnRunScan{background:linear-gradient(135deg,#2f81f7 0%,#1f6feb 100%) !important;box-shadow:0 0 16px rgba(47,129,247,.4),0 4px 12px rgba(0,0,0,.3);border-radius:8px !important;font-weight:700 !important;transition:box-shadow .2s,transform .15s;padding:.55rem 1.6rem !important;}
+        #btnRunScan:hover{box-shadow:0 0 24px rgba(47,129,247,.6);transform:translateY(-1px);}
+        #liveScannerPanel input::-webkit-outer-spin-button,#liveScannerPanel input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+        #liveScannerPanel input[type=number]{-moz-appearance:textfield;}
+        .scan-config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.25rem;}
+        .scan-param{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:.85rem;transition:border-color .2s,background .2s;}
+        .scan-param:hover{border-color:rgba(47,129,247,.3);background:rgba(47,129,247,.04);}
+        .scan-param label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.55rem;}
+        .scan-param .form-control{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.1);}
+        .scan-param .form-control:focus{border-color:#2f81f7;box-shadow:0 0 0 2px rgba(47,129,247,.15);}
+        .live-filter-bar{background:rgba(47,129,247,.06);border:1px solid rgba(47,129,247,.2);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.25rem;}
+        .scan-results-table th{background:rgba(255,255,255,.025);font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.75rem .9rem;color:var(--text-muted);white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.08);}
+        .scan-results-table td{padding:.7rem .9rem;border-bottom:1px solid rgba(255,255,255,.05);}
+        .scan-results-table tr:last-child td{border-bottom:none;}
+        .scan-results-table tr:hover td{background:rgba(47,129,247,.05);}
+        .badge-up{color:#2ea043;font-weight:700;font-size:.75rem;}
+        .badge-down{color:#da3633;font-weight:700;font-size:.75rem;}
+        .badge-above{background:rgba(46,160,67,.15);color:#2ea043;padding:.15rem .45rem;border-radius:20px;font-size:.72rem;font-weight:600;}
+        .badge-below{background:rgba(218,54,51,.15);color:#da3633;padding:.15rem .45rem;border-radius:20px;font-size:.72rem;font-weight:600;}
+        .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;padding:1.25rem;}
+        .detail-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:.9rem 1rem;}
+        .detail-card .dc-label{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+        .detail-card .dc-value{font-size:1.1rem;font-weight:700;}
+        #stockDetailModal::-webkit-scrollbar{width:5px;}
+        #stockDetailModal::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px;}
+        @media(max-width:520px){.detail-grid{grid-template-columns:1fr 1fr;}}
+    </style>
+</head>
+<body>
+<div id="appShell">
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+    <div id="sidebarHeader">
+        <div id="sidebarLogo">
+            <div class="logo-icon">📈</div>
+            <div class="logo-text">RSI<br>Supertrend</div>
+        </div>
+        <button id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="6"  x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+    </div>
+    <ul id="sidebarNav">
+        <li data-module="scanner"     class="active"   onclick="switchModule('scanner')"     title="Signal Scanner">
+            <span class="nav-icon">🔭</span><span class="nav-label">Scanner</span>
+        </li>
+        <li data-module="backtester"              onclick="switchModule('backtester')"  title="Strategy Backtester">
+            <span class="nav-icon">📊</span><span class="nav-label">Backtester</span>
+        </li>
+        <li data-module="datacollect"             onclick="switchModule('datacollect')" title="Data Collection">
+            <span class="nav-icon">📡</span><span class="nav-label">Data Collection</span>
+        </li>
+        <li data-module="portfolio" class="disabled" title="Coming Soon">
+            <span class="nav-icon">💼</span><span class="nav-label">Live Portfolio</span>
+            <span class="nav-badge">Soon</span>
+        </li>
+    </ul>
+    <div id="sidebarFooter">v2.0 · NSE Equity</div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="mainContent">
+    <div id="topBar">
+        <span id="topBarTitle">Signal Scanner</span>
+        <span id="topBarSubtitle">Live market scanning · RSI + Supertrend</span>
+        <div id="topBarRight">
+            <span id="topBarClock" style="font-variant-numeric:tabular-nums;"></span>
+            <span style="color:#21262d;">|</span>
+            <span>IST</span>
+        </div>
+    </div>
+    <div id="moduleArea">
+
+        <!-- MODULE: SCANNER -->
+        <div id="module-scanner" class="module-pane active">
+            <!-- SCANNER SECTION -->
+            <div id="liveScannerPanel" style="margin-top: 2rem; background: rgba(22,27,34,0.8); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+
+                <!-- Scanner Header -->
+                <div class="scanner-header">
+                    <h3 class="scanner-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2f81f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Signal Scanner
+                    </h3>
+                    <div style="display:flex; gap:0.75rem; align-items:center;">
+                        <span id="scanResultCount" style="font-size:0.83rem; color:var(--text-muted); display:none; background:rgba(47,129,247,0.1); border:1px solid rgba(47,129,247,0.2); padding:0.2rem 0.65rem; border-radius:20px;"></span>
+                        <button onclick="runLiveScan()" id="btnRunScan" style="margin:0; width:auto; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <span id="scanBtnText">Run Scan</span>
+                            <div id="scanLoader" class="loader" style="width:13px; height:13px; border-width:2px; display:none;"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scan Configuration Grid -->
+                <div class="scan-config-grid">
+                    <div class="scan-param">
+                        <label style="color:var(--text-muted);">🌐 Universe</label>
+                        <select id="scanUniverse" class="form-control">
+                            <option value="ALL">Nifty 500 (All)</option>
+                            <option value="NIFTY50">Nifty 50</option>
+                            <option value="NIFTY100">Nifty 100</option>
+                            <option value="NIFTY200">Nifty 200</option>
+                        </select>
+                    </div>
+
+                    <div class="scan-param">
+                        <label style="color:#58a6ff;">⚡ Supertrend LTF — Period / Mult</label>
+                        <div style="display:flex; gap:0.5rem;">
+                            <input type="number" id="scanStPeriod" class="form-control" value="21" min="1" title="LTF Period">
+                            <input type="number" id="scanStMult" class="form-control" value="1.5" step="0.1" min="0.1" title="LTF Multiplier">
+                        </div>
+                    </div>
+
+
+
+                    <div class="scan-param">
+                        <label style="color:#ffca28;">📊 RSI (LTF)</label>
+                        <div style="margin-top:0.4rem;">
+                            <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem; text-align:center;">PERIOD</div>
+                            <input type="number" id="scanRsiLtfPeriod" class="form-control" value="14" min="1" style="text-align:center; width:100%;">
+                        </div>
+                    </div>
+
+                    <div class="scan-param">
+                        <label style="color:#ffca28;">📊 RSI (HTF)</label>
+                        <div style="margin-top:0.4rem;">
+                            <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem; text-align:center;">PERIOD</div>
+                            <input type="number" id="scanRsiHtfPeriod" class="form-control" value="14" min="1" style="text-align:center; width:100%;">
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <!-- Live Filter Bar (client-side, shown after scan) -->
+                <div id="scanLiveFilterBar" style="display:none;" class="live-filter-bar">
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+                        <span style="font-size:0.78rem; font-weight:700; color:var(--primary); white-space:nowrap;">LIVE FILTERS:</span>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">LTF RSI</span>
+                            <input type="number" id="sfLtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Min" oninput="applyScanFilters()">
+                            <input type="number" id="sfLtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Max" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">HTF RSI</span>
+                            <input type="number" id="sfHtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Min" oninput="applyScanFilters()">
+                            <input type="number" id="sfHtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Max" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">CMF &gt;</span>
+                            <input type="number" id="sfCmf" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="0.01" placeholder="Min" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">Rel Vol &gt;</span>
+                            <input type="number" id="sfRelVol" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="0.1" placeholder="Min" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">ATR &gt;</span>
+                            <input type="number" id="sfAtr" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="1" placeholder="Min" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">ADX &gt;</span>
+                            <input type="number" id="sfAdx" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="1" placeholder="Min" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:#ffca28; font-weight:600;">Range (%)</span>
+                            <input type="number" id="sfRangeMin" class="form-control" style="width:48px; padding:0.2rem 0.35rem;" step="0.1" placeholder="Min" oninput="applyScanFilters()">
+                            <input type="number" id="sfRangeMax" class="form-control" style="width:48px; padding:0.2rem 0.35rem;" step="0.1" placeholder="Max" oninput="applyScanFilters()">
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:var(--text-muted);">EMA20:</span>
+                            <select id="sfEma" class="form-control" style="width:78px; padding:0.2rem 0.35rem;" onchange="applyScanFilters()">
+                                <option value="ALL">ALL</option>
+                                <option value="Above">Above</option>
+                                <option value="Below">Below</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:#58a6ff; font-weight:600;">LTF Trend:</span>
+                            <select id="sfLtfTrend" class="form-control" style="width:140px; padding:0.2rem 0.35rem;" onchange="applyScanFilters()">
+                                <option value="ALL">ALL</option>
+                                <option value="JUST_TURNED_UP">⚡ Just Turned UP</option>
+                                <option value="UPTREND">UPTREND</option>
+                                <option value="DOWNTREND">DOWNTREND</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:0.35rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:#ffca28; font-weight:600;">HTF Trend:</span>
+                            <select id="sfHtfTrend" class="form-control" style="width:108px; padding:0.2rem 0.35rem;" onchange="applyScanFilters()">
+                                <option value="ALL">ALL</option>
+                                <option value="UPTREND">UPTREND</option>
+                                <option value="DOWNTREND">DOWNTREND</option>
+                            </select>
+                        </div>
+                        <button onclick="applyScanFilters()" style="margin:0; width:auto; padding:0.3rem 0.9rem; background:var(--primary); color:#fff; border:none; border-radius:5px; font-size:0.8rem; font-weight:600; cursor:pointer;">Apply Filters</button>
+                        <button onclick="resetScanFilters()" style="margin:0; width:auto; padding:0.3rem 0.9rem; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:5px; font-size:0.8rem; cursor:pointer;">Reset</button>
+                    </div>
+                    <!-- Second row: Target % + SL % + Live Price status -->
+                    <div style="display:flex; gap:1rem; align-items:center; margin-top:0.55rem; padding-top:0.55rem; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;">
+                        <div style="display:flex; gap:0.4rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:#4ade80; font-weight:700;">🎯 Target %:</span>
+                            <input type="number" id="sfTargetPct" class="form-control" style="width:65px; padding:0.2rem 0.4rem;" placeholder="e.g. 5" min="0.5" max="50" step="0.5" value="5" oninput="recomputeTargets()">
+                            <span style="font-size:0.68rem; color:var(--text-muted);">from entry</span>
+                        </div>
+                        <div style="display:flex; gap:0.4rem; align-items:center;">
+                            <span style="font-size:0.72rem; color:#f87171; font-weight:700;">🛡️ SL %:</span>
+                            <input type="number" id="sfSlPct" class="form-control" style="width:65px; padding:0.2rem 0.4rem;" placeholder="e.g. 5" min="0.5" max="30" step="0.5" value="5" oninput="recomputeStoploss()">
+                            <span style="font-size:0.68rem; color:var(--text-muted);" title="Stoploss = max(Candle Low, Entry × (1 − SL%)) — caps risk at SL%">max(Low, Entry−SL%)</span>
+                        </div>
+                        <div style="display:flex; gap:0.4rem; align-items:center; margin-left:1rem;">
+                            <span id="liveWsStatus" style="width:8px; height:8px; border-radius:50%; background:#555; display:inline-block;"></span>
+                            <span id="liveWsLabel" style="font-size:0.7rem; color:var(--text-muted);">Live prices: Off</span>
+                            <button onclick="toggleLivePrices()" id="btnLivePrices" style="padding:0.18rem 0.6rem; font-size:0.7rem; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:4px; color:var(--text-muted); cursor:pointer;">Connect</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Scan Results Table -->
+                <div id="scanResultsContainer" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <h4 style="margin:0; color:var(--text-muted); font-size:0.9rem;">Scan Results</h4>
+                        <span id="scanFilteredCount" style="font-size:0.8rem; color:var(--text-muted);"></span>
+                    </div>
+                    <div style="overflow-x:auto; border:1px solid rgba(255,255,255,0.07); border-radius:10px;">
+                        <table class="scan-results-table" style="width:100%; border-collapse:collapse; min-width:1200px;">
+                            <thead>
+                                <tr style="background:rgba(255,255,255,0.02); border-bottom:2px solid var(--border); text-align:left;">
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">#</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">Company</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">Date</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">Close ₹</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#4ade80; white-space:nowrap;">Live ₹</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#4ade80; white-space:nowrap;">Target</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#f87171; white-space:nowrap;">SL</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#58a6ff; white-space:nowrap;">ST LTF</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#ab71f8; white-space:nowrap;">ST HTF</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#ffca28; white-space:nowrap;">RSI (LTF)</th>
+                                    <th style="padding:0.7rem 0.75rem; color:#ffca28; white-space:nowrap;">RSI (HTF)</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">CMF</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">Rel Vol</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">ATR</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">ADX</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">Range %</th>
+                                    <th style="padding:0.7rem 0.75rem; color:var(--text-muted); white-space:nowrap;">EMA20</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scanResultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        </div><!-- /module-scanner -->
+
+        <!-- MODULE: BACKTESTER -->
+        <div id="module-backtester" class="module-pane">
+    <div class="container" id="backtestView">
+        <!-- Settings Panel -->
+        <div class="panel full-width">
+            <form id="backtestForm">
+                <div class="form-group">
+                    <label>Companies (comma-separated or "ALL")</label>
+                    <input type="text" id="companySelect" class="form-control" value="ALL" placeholder="e.g. RELIANCE, TCS">
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" id="startDate" class="form-control" value="2023-01-01">
+                    </div>
+                    <div class="form-group">
+                        <label>End Date</label>
+                        <input type="date" id="endDate" class="form-control" value="2024-12-31">
+                    </div>
+
+                    <div class="form-group">
+                        <label>LTF (Lower Time Frame Suffix)</label>
+                        <input type="text" id="ltfSelect" class="form-control" value="Day">
+                    </div>
+                    <div class="form-group">
+                        <label>HTF (Higher Time Frame Suffix)</label>
+                        <input type="text" id="htfSelect" class="form-control" value="Week">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Supertrend (LTF) Period / Multiplier</label>
+                        <div class="grid-2" style="margin-bottom: 0;">
+                            <input type="number" id="stPeriod" class="form-control" value="21" title="Period">
+                            <input type="number" step="0.1" id="stMult" class="form-control" value="1.5" title="Multiplier">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Supertrend (HTF) Period / Multiplier</label>
+                        <div class="grid-2" style="margin-bottom: 0;">
+                            <input type="number" id="stHtfPeriod" class="form-control" value="21" title="Period">
+                            <input type="number" step="0.1" id="stHtfMult" class="form-control" value="1.5" title="Multiplier">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>RSI (LTF) Period</label>
+                        <input type="number" id="rsiLtf" class="form-control" value="21">
+                    </div>
+                    <div class="form-group">
+                        <label>LTF RSI Range (Min - Max)</label>
+                        <div class="grid-2" style="margin-bottom: 0;">
+                            <input type="number" id="rsiLtfMin" class="form-control" value="60" placeholder="Min">
+                            <input type="number" id="rsiLtfMax" class="form-control" value="90" placeholder="Max">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>RSI (HTF) Period</label>
+                        <input type="number" id="rsiHtf" class="form-control" value="21">
+                    </div>
+                    <div class="form-group">
+                        <label>HTF RSI Range (Min - Max)</label>
+                        <div class="grid-2" style="margin-bottom: 0;">
+                            <input type="number" id="rsiHtfMin" class="form-control" value="60" placeholder="Min">
+                            <input type="number" id="rsiHtfMax" class="form-control" value="90" placeholder="Max">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="targetGroup">
+                        <!-- Target Mode Toggle -->
+                        <label>Target Mode</label>
+                        <div style="display: flex; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 500; color: var(--text-main);">
+                                <input type="radio" name="targetMode" id="targetModeFixed" value="fixed" checked onchange="toggleTargetMode()"> Fixed %
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 500; color: #58a6ff;">
+                                <input type="radio" name="targetMode" id="targetModeDynamic" value="dynamic" onchange="toggleTargetMode()"> ⚡ Dynamic (ATR)
+                            </label>
+                        </div>
+                        <!-- Fixed: target level -->
+                        <div id="fixedTargetInput">
+                            <input type="number" id="targetLevel" class="form-control" value="10" placeholder="e.g. 10">
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Target = Entry × (1 + X%)</small>
+                        </div>
+                        <!-- Dynamic: ATR multiplier -->
+                        <div id="dynamicTargetInput" style="display: none;">
+                            <input type="number" step="0.1" id="atrMultiplier" class="form-control" value="2.0" min="0.5" max="10" placeholder="e.g. 2.0">
+                            <small style="color: #58a6ff; font-size: 0.75rem;">Target = Entry + (ATR × Multiplier) — adapts to each stock's volatility</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Stoploss (%)</label>
+                        <input type="number" step="0.1" id="maxStoploss" class="form-control" value="5.0">
+                    </div>
+                    <div class="form-group">
+                        <label title="New entry = Breakout Price × (1 + X%). Stoploss and Target are recalculated from this new entry.">Entry Offset (%)
+                            <small style="color: var(--text-muted); font-weight: 400;"> — 0 = off</small>
+                        </label>
+                        <input type="number" step="0.1" id="entryOffset" class="form-control" value="0.0" min="0" placeholder="e.g. 0.5">
+                        <small style="color: #ffca28; font-size: 0.72rem;">Entry = Breakout + X% → SL & Target recalculated from new entry</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Parallel Threads</label>
+                        <input type="number" id="maxParallel" class="form-control" value="4" min="1" max="16">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lookForwardLimit">Look Forward Limit (Bars)</label>
+                        <input type="number" id="lookForwardLimit" class="form-control" value="1460">
+                    </div>
+                </div>
+
+                <div id="progressStatus" style="display: none; text-align: center; margin-bottom: 1rem; color: var(--primary); font-weight: 600; font-size: 0.9rem;"></div>
+                <button type="submit" id="submitBtn">
+                    <span id="btnText">Run Backtest</span>
+                    <div class="loader" id="loader"></div>
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="panel full-width results" id="resultsPanel">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h2 style="margin: 0;">Results Overview</h2>
+                    <button class="toggle-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="document.getElementById('fileInput').click()">Load Results</button>
+                    <button class="toggle-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="saveResults()">Save Results</button>
+                    <input type="file" id="fileInput" style="display: none;" accept=".json" onchange="loadResults(event)">
+                </div>
+                
+                <div style="background: rgba(88, 166, 255, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">LIVE FILTERS:</div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">LTF RSI</span>
+                        <input type="number" id="filterLtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                        <input type="number" id="filterLtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">HTF RSI</span>
+                        <input type="number" id="filterHtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                        <input type="number" id="filterHtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="title" title="Chaikin Money Flow">CMF &gt;</span>
+                        <input type="number" id="filterCmf" step="0.01" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="title" title="Relative Volume (20 period)">Rel Vol &gt;</span>
+                        <input type="number" id="filterRelVol" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="title" title="ATR (14)">ATR &gt;</span>
+                        <input type="number" id="filterAtr" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="title" title="ADX (14)">ADX &gt;</span>
+                        <input type="number" id="filterAdx" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">Range (%)</span>
+                        <input type="number" id="filterRangeMin" step="0.1" class="form-control" style="width: 55px; padding: 0.25rem;" placeholder="Min">
+                        <input type="number" id="filterRangeMax" step="0.1" class="form-control" style="width: 55px; padding: 0.25rem;" placeholder="Max">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">Body (%)</span>
+                        <input type="number" id="filterBodyMin" step="0.1" class="form-control" style="width: 55px; padding: 0.25rem;" placeholder="Min">
+                        <input type="number" id="filterBodyMax" step="0.1" class="form-control" style="width: 55px; padding: 0.25rem;" placeholder="Max">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">Max High < (%)</span>
+                        <input type="number" id="filterMaxHigh" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="X %">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;" title="Only consider trades where the Max High Reached during the Look Forward period is > X%">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">Max High (LF) > (%)</span>
+                        <input type="number" id="filterMaxHighLf" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="X %">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;" title="Only consider trades where the Close price at the end of the Look Forward period is > (Entry + X%)">
+                        <span style="font-size: 0.75rem; color: #ab71f8; font-weight: 600;">Close (LF) > (%)</span>
+                        <input type="number" id="filterCloseLf" step="0.1" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="X %">
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="title">EMA20:</span>
+                        <select id="filterEma" class="form-control" style="width: 80px; padding: 0.25rem;">
+                            <option value="ALL">ALL</option>
+                            <option value="Above">Above</option>
+                            <option value="Below">Below</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">HTF Trend:</span>
+                        <select id="filterHtfTrend" class="form-control" style="width: 110px; padding: 0.25rem;">
+                            <option value="ALL">ALL</option>
+                            <option value="UPTREND">UPTREND</option>
+                            <option value="DOWNTREND">DOWNTREND</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 0.75rem; color: #ffca28; font-weight: 600;">Nifty Index:</span>
+                        <select id="filterNiftyIndex" class="form-control" style="width: 110px; padding: 0.25rem;">
+                            <option value="ALL">Nifty 500 (ALL)</option>
+                            <option value="NIFTY50">Nifty 50</option>
+                            <option value="NIFTY100">Nifty 100</option>
+                            <option value="NIFTY200">Nifty 200</option>
+                        </select>
+                    </div>
+                    <button onclick="applyFilters()" class="toggle-btn" style="background-color: var(--primary); color: #fff; border:none; display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="applyFilterText">Apply Filters</span>
+                        <div class="loader" id="filterLoader" style="display: none; width: 12px; height: 12px; border-width: 2px;"></div>
+                    </button>
+                    <button onclick="resetFilters()" class="toggle-btn" style="border-color: var(--text-muted); color: var(--text-muted);">Reset</button>
+                </div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div>Total Trades</div>
+                    <div class="metric-value" id="resTotal">0</div>
+                </div>
+                <div class="metric-card">
+                    <div>Win Rate (Target Hit)</div>
+                    <div class="metric-value" id="resWinRate">0%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Target Hits (Count / %)</div>
+                    <div class="metric-value" id="resTargetHits">0 / 0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Stoploss Hits (Count / %)</div>
+                    <div class="metric-value" id="resStoplossHits">0 / 0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Net Profit (%)</div>
+                    <div class="metric-value" id="resNetProfit">0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Sum Pos / Sum Neg (%)</div>
+                    <div class="metric-value" id="resSumPosNeg">0.00 / 0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div>Pos Trades (Exc. Target)</div>
+                    <div class="metric-value" id="resPosExcTarget">0</div>
+                </div>
+                <div class="metric-card">
+                    <div>Neg Trades (Exc. Stoploss)</div>
+                    <div class="metric-value" id="resNegExcStoploss">0</div>
+                </div>
+                <div class="metric-card" style="border-color: #da363355;">
+                    <div style="color: var(--danger);">SLs in Look Forward</div>
+                    <div class="metric-value" id="resSlHitLookforward" style="color: var(--danger);">0</div>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">(SLs hit during LF)</small>
+                </div>
+                <div class="metric-card" style="border-color: #ffca2855;">
+                    <div style="color: #ffca28;">Stoplosses Avoided</div>
+                    <div class="metric-value" id="optAvoidedSL" style="color: #ffca28;">0</div>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">(SLs where Max High < X)</small>
+                </div>
+                <div class="metric-card" style="border-color: rgba(46, 160, 67, 0.3);">
+                    <div style="color: var(--success);">Targets Retained</div>
+                    <div class="metric-value" id="optRetainedTarget" style="color: var(--success);">0</div>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">(Targets where Max High ≥ X)</small>
+                </div>
+                <div class="metric-card">
+                    <div>Average Return / Trade</div>
+                    <div class="metric-value" id="resAvgReturn">0.00%</div>
+                </div>
+                <div class="metric-card">
+                    <div>Time Taken</div>
+                    <div class="metric-value" id="resTimeTaken">0s</div>
+                </div>
+            </div>
+
+            <!-- Look Forward Rejection Simulation Dashboard -->
+            <div id="lfSimulationDashboard" style="display: none; margin-top: 1.5rem; background: rgba(171, 113, 248, 0.05); border: 1px solid #ab71f8; padding: 1.5rem; border-radius: 8px;">
+                <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #ab71f8; border-bottom: 1px solid rgba(171, 113, 248, 0.3); padding-bottom: 0.5rem;">
+                    Simulation: Exiting Discarded Trades at Look Forward End
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    This section analyzes trades from your base filters that <strong>FAILED</strong> the <code>Close (LF) > X%</code> condition. It simulates exiting all of these trades exactly at the end of the Look Forward period.
+                </p>
+                <div class="metrics-grid" style="margin-bottom: 0;">
+                    <div class="metric-card" style="border-color: rgba(171, 113, 248, 0.3);">
+                        <div>Discarded Trades</div>
+                        <div class="metric-value" id="lfSimTotal" style="color: #ab71f8;">0</div>
+                    </div>
+                    <div class="metric-card" style="border-color: rgba(171, 113, 248, 0.3);">
+                        <div>Win Rate (> 0% at LF)</div>
+                        <div class="metric-value" id="lfSimWinRate" style="color: #ab71f8;">0%</div>
+                    </div>
+                    <div class="metric-card" style="border-color: rgba(171, 113, 248, 0.3);">
+                        <div>Net Profit (LF Close)</div>
+                        <div class="metric-value" id="lfSimNetProfit" style="color: #ab71f8;">0.00%</div>
+                    </div>
+                    <div class="metric-card" style="border-color: rgba(171, 113, 248, 0.3);">
+                        <div>Average Return / Trade</div>
+                        <div class="metric-value" id="lfSimAvgReturn" style="color: #ab71f8;">0.00%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Analysis Dashboard -->
+            <div id="advancedDashboard" style="margin-top: 3rem;">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Advanced Analysis Dashboard</h3>
+                
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                    <button class="toggle-btn" onclick="renderAnalysis('year')" id="tabYear" style="background-color: var(--primary); color: #fff; border: 1px solid var(--primary);">Year-wise</button>
+                    <button class="toggle-btn" onclick="renderAnalysis('month')" id="tabMonth" style="background-color: transparent; color: var(--text-main); border: 1px solid var(--border);">Month-wise</button>
+                    <button class="toggle-btn" onclick="renderAnalysis('company')" id="tabCompany" style="background-color: transparent; color: var(--text-main); border: 1px solid var(--border);">Company-wise</button>
+                </div>
+
+                <div style="overflow-x: auto; background-color: var(--surface); border: 1px solid var(--border); border-radius: 6px;">
+                    <table id="analysisTable" style="margin: 0; min-width: 600px;">
+                        <thead>
+                            <tr id="analysisTableHeader">
+                                <th>Group</th>
+                                <th>Trades</th>
+                                <th>Win Rate</th>
+                                <th>Avg Return</th>
+                                <th>Target Hits</th>
+                                <th>SL Hits</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysisTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No data to display.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="detailsSection" style="margin-top: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem;">Detailed Trade Results</h3>
+                    <button onclick="toggleDetails('tradesTableContainer')" class="toggle-btn" id="tradesTableBtn">Show Details</button>
+                </div>
+                <div id="tradesTableContainer" style="display: none; overflow-x: auto;">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Entry Time</th>
+                                <th>Type / Exit</th>
+                                <th>Target</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTable">
+                        </tbody>
+                    </table>
+                    <div id="loadMoreContainer" style="text-align: center; padding: 1rem; display: none;">
+                        <button onclick="renderNextPage()" class="toggle-btn" style="width: auto; padding: 0.5rem 2rem;">Load More Results</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem;">Trade Metadata Logs</h3>
+                    <button onclick="toggleDetails('tradeLogs')" class="toggle-btn" id="tradeLogsBtn">Show Details</button>
+                </div>
+                <div id="tradeLogs" style="display: none; flex-direction: column; gap: 1rem; max-height: 500px; overflow-y: auto; padding-right: 0.5rem;"></div>
+            </div>
+        </div>
+    </div>
+
+        </div><!-- /module-backtester -->
+
+        <!-- MODULE: DATA COLLECTION -->
+        <div id="module-datacollect" class="module-pane">
+            <div id="dcLoadFail" style="display:none;padding:3rem;text-align:center;">
+                <div style="font-size:3rem;margin-bottom:1rem;">📡</div>
+                <h2 style="color:#fff;margin-bottom:.5rem;">Data Collection Service</h2>
+                <p style="color:#8b949e;margin-bottom:1.5rem;">The Data Collection backend is not running on port 8001.</p>
+                <code style="background:#161b22;padding:.5rem 1rem;border-radius:6px;font-size:.85rem;color:#58a6ff;display:block;max-width:500px;margin:0 auto;line-height:1.8;">
+                    cd "D:\RSI_SuperTrand\Data Collection\backend"<br>
+                    uvicorn app.main:app --port 8001 --reload
+                </code>
+                <button onclick="reloadDcFrame()" style="width:auto;margin-top:1.5rem;padding:.5rem 2rem;background:#2f81f7;">Reload</button>
+            </div>
+            <iframe id="dcFrame" src="http://localhost:8001"
+                style="width:100%;flex:1;border:none;min-height:calc(100vh - 48px);"
+                onload="document.getElementById('dcLoadFail').style.display='none';">
+            </iframe>
+        </div><!-- /module-datacollect -->
+
+        <!-- MODULE: LIVE PORTFOLIO -->
+        <div id="module-portfolio" class="module-pane">
+            <div style="text-align:center;max-width:420px;">
+                <div style="font-size:5rem;margin-bottom:1.5rem;filter:grayscale(.4);">💼</div>
+                <h2 style="color:#fff;font-size:1.8rem;margin-bottom:.75rem;">Live Portfolio</h2>
+                <p style="color:#8b949e;font-size:1rem;line-height:1.6;margin-bottom:2rem;">
+                    Real-time portfolio tracking, P&amp;L monitoring, and position management.<br>
+                    <strong style="color:#4a4f56;">Coming soon.</strong>
+                </p>
+                <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,202,40,.08);border:1px solid rgba(255,202,40,.25);padding:.5rem 1.2rem;border-radius:20px;color:#ffca28;font-size:.82rem;font-weight:600;">
+                    🚧 Under Development
+                </div>
+            </div>
+        </div><!-- /module-portfolio -->
+
+    </div><!-- /moduleArea -->
+</main>
+</div><!-- /appShell -->
+
+<!-- STOCK DETAIL MODAL -->
+    <!-- Stock Detail Modal -->
+    <div id="stockDetailOverlay" onclick="closeStockDetail(event)" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; backdrop-filter:blur(4px); justify-content:center; align-items:center;">
+        <div id="stockDetailModal" style="background:#1a1d2e; border:1px solid rgba(255,255,255,0.1); border-radius:16px; width:min(680px,96vw); max-height:88vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.6); padding:0; position:relative; animation:slideUp 0.22s ease;">
+            <div id="stockDetailContent"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes slideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100% { box-shadow:0 0 8px rgba(22,163,74,0.5); } 50% { box-shadow:0 0 20px rgba(22,163,74,0.9); } }
+        #stockDetailModal::-webkit-scrollbar { width:5px; }
+        #stockDetailModal::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem; padding:1.25rem; }
+        .detail-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:0.9rem 1rem; }
+        .detail-card .dc-label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.3rem; }
+        .detail-card .dc-value { font-size:1.1rem; font-weight:700; }
+        @media (max-width:520px) { .detail-grid { grid-template-columns:1fr 1fr; } }
+    </style>
+
+    <script>
+        const NIFTY_50 = [
+            'ADANIENT', 'ADANIPORTS', 'APOLLOHOSP', 'ASIANPAINT', 'AXISBANK',
+            'BAJAJ-AUTO', 'BAJFINANCE', 'BAJAJFINSV', 'BEL', 'BHARTIARTL',
+            'CIPLA', 'COALINDIA', 'DRREDDY', 'EICHERMOT', 'ETERNAL',
+            'GRASIM', 'HCLTECH', 'HDFCBANK', 'HDFCLIFE', 'HINDALCO',
+            'HINDUNILVR', 'ICICIBANK', 'ITC', 'INFY', 'INDIGO',
+            'JSWSTEEL', 'JIOFIN', 'KOTAKBANK', 'LT', 'M&M',
+            'MARUTI', 'MAXHEALTH', 'NTPC', 'NESTLEIND', 'ONGC',
+            'POWERGRID', 'RELIANCE', 'SBILIFE', 'SHRIRAMFIN', 'SBIN',
+            'SUNPHARMA', 'TCS', 'TATACONSUM', 'TMPV', 'TATASTEEL',
+            'TECHM', 'TITAN', 'TRENT', 'ULTRACEMCO', 'WIPRO'
+        ];
+
+        const NIFTY_100 = [
+            'ABB', 'ADANIENSOL', 'ADANIENT', 'ADANIGREEN', 'ADANIPORTS',
+            'ADANIPOWER', 'AMBUJACEM', 'APOLLOHOSP', 'ASIANPAINT', 'DMART',
+            'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 'BAJAJFINSV', 'BAJAJHLDNG',
+            'BANKBARODA', 'BEL', 'BPCL', 'BHARTIARTL', 'BOSCHLTD',
+            'BRITANNIA', 'CGPOWER', 'CANBK', 'CHOLAFIN', 'CIPLA',
+            'COALINDIA', 'CUMMINSIND', 'DLF', 'DIVISLAB', 'DRREDDY',
+            'EICHERMOT', 'ETERNAL', 'GAIL', 'GODREJCP', 'GRASIM',
+            'HCLTECH', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE', 'HINDALCO',
+            'HAL', 'HINDUNILVR', 'HINDZINC', 'HYUNDAI', 'ICICIBANK',
+            'ITC', 'INDHOTEL', 'IOC', 'IRFC', 'INFY',
+            'INDIGO', 'JSWSTEEL', 'JINDALSTEL', 'JIOFIN', 'KOTAKBANK',
+            'LTM', 'LT', 'LODHA', 'M&M', 'MARUTI',
+            'MAXHEALTH', 'MAZDOCK', 'MUTHOOTFIN', 'NTPC', 'NESTLEIND',
+            'ONGC', 'PIDILITIND', 'PFC', 'POWERGRID', 'PNB',
+            'RECLTD', 'RELIANCE', 'SBILIFE', 'MOTHERSON', 'SHREECEM',
+            'SHRIRAMFIN', 'ENRIN', 'SIEMENS', 'SOLARINDS', 'SBIN',
+            'SUNPHARMA', 'TVSMOTOR', 'TATACAP', 'TCS', 'TATACONSUM',
+            'TMCV', 'TMPV', 'TATAPOWER', 'TATASTEEL', 'TECHM',
+            'TITAN', 'TORNTPHARM', 'TRENT', 'ULTRACEMCO', 'UNIONBANK',
+            'UNITDSPR', 'VBL', 'VEDL', 'WIPRO', 'ZYDUSLIFE'
+        ];
+
+        const NIFTY_200 = [
+            '360ONE', 'ABB', 'APLAPOLLO', 'AUBANK', 'ADANIENSOL',
+            'ADANIENT', 'ADANIGREEN', 'ADANIPORTS', 'ADANIPOWER', 'ATGL',
+            'ABCAPITAL', 'ALKEM', 'AMBUJACEM', 'APOLLOHOSP', 'ASHOKLEY',
+            'ASIANPAINT', 'ASTRAL', 'AUROPHARMA', 'DMART', 'AXISBANK',
+            'BSE', 'BAJAJ-AUTO', 'BAJFINANCE', 'BAJAJFINSV', 'BAJAJHLDNG',
+            'BANKBARODA', 'BANKINDIA', 'BDL', 'BEL', 'BHARATFORG',
+            'BHEL', 'BPCL', 'BHARTIARTL', 'GROWW', 'BIOCON',
+            'BLUESTARCO', 'BOSCHLTD', 'BRITANNIA', 'CGPOWER', 'CANBK',
+            'CHOLAFIN', 'CIPLA', 'COALINDIA', 'COCHINSHIP', 'COFORGE',
+            'COLPAL', 'CONCOR', 'COROMANDEL', 'CUMMINSIND', 'DLF',
+            'DABUR', 'DIVISLAB', 'DIXON', 'DRREDDY', 'EICHERMOT',
+            'ETERNAL', 'EXIDEIND', 'NYKAA', 'FEDERALBNK', 'FORTIS',
+            'GAIL', 'GVT&D', 'GMRAIRPORT', 'GLENMARK', 'GODFRYPHLP',
+            'GODREJCP', 'GODREJPROP', 'GRASIM', 'HCLTECH', 'HDFCAMC',
+            'HDFCBANK', 'HDFCLIFE', 'HAVELLS', 'HEROMOTOCO', 'HINDALCO',
+            'HAL', 'HINDPETRO', 'HINDUNILVR', 'HINDZINC', 'POWERINDIA',
+            'HUDCO', 'HYUNDAI', 'ICICIBANK', 'ICICIGI', 'ICICIAMC',
+            'IDFCFIRSTB', 'ITC', 'INDIANB', 'INDHOTEL', 'IOC',
+            'IRCTC', 'IRFC', 'IREDA', 'INDUSTOWER', 'INDUSINDBK',
+            'NAUKRI', 'INFY', 'INDIGO', 'JSWENERGY', 'JSWSTEEL',
+            'JINDALSTEL', 'JIOFIN', 'JUBLFOOD', 'KEI', 'KPITTECH',
+            'KALYANKJIL', 'KOTAKBANK', 'LTF', 'LGEINDIA', 'LICHSGFIN',
+            'LTM', 'LT', 'LAURUSLABS', 'LENSKART', 'LODHA',
+            'LUPIN', 'MRF', 'M&MFIN', 'M&M', 'MANKIND',
+            'MARICO', 'MARUTI', 'MFSL', 'MAXHEALTH', 'MAZDOCK',
+            'MOTILALOFS', 'MPHASIS', 'MCX', 'MUTHOOTFIN', 'NHPC',
+            'NMDC', 'NTPC', 'NATIONALUM', 'NESTLEIND', 'OBEROIRLTY',
+            'ONGC', 'OIL', 'PAYTM', 'OFSS', 'POLICYBZR',
+            'PIIND', 'PAGEIND', 'PATANJALI', 'PERSISTENT', 'PHOENIXLTD',
+            'PIDILITIND', 'POLYCAB', 'PFC', 'POWERGRID', 'PREMIERENE',
+            'PRESTIGE', 'PNB', 'RECLTD', 'RADICO', 'RVNL',
+            'RELIANCE', 'SBICARD', 'SBILIFE', 'SRF', 'MOTHERSON',
+            'SHREECEM', 'SHRIRAMFIN', 'ENRIN', 'SIEMENS', 'SOLARINDS',
+            'SBIN', 'SAIL', 'SUNPHARMA', 'SUPREMEIND', 'SUZLON',
+            'SWIGGY', 'TVSMOTOR', 'TATACAP', 'TATACOMM', 'TCS',
+            'TATACONSUM', 'TATAELXSI', 'TATAINVEST', 'TMCV', 'TMPV',
+            'TATAPOWER', 'TATASTEEL', 'TECHM', 'TITAN', 'TORNTPHARM',
+            'TRENT', 'TIINDIA', 'UPL', 'ULTRACEMCO', 'UNIONBANK',
+            'UNITDSPR', 'VBL', 'VEDL', 'VMM', 'IDEA',
+            'VOLTAS', 'WAAREEENER', 'WIPRO', 'YESBANK', 'ZYDUSLIFE'
+        ];
+
+        let allSignals = [];
+        let filteredSignals = [];
+        let currentTimeTaken = 0;
+        let currentPage = 1;
+        const PAGE_SIZE = 100;
+        let currentAnalysisTab = 'year';
+        let liveStatusInterval = null;
+        let liveScanResults = []; // All raw scan results from backend
+
+        function switchMainTab(tab) {
+            // Sidebar redesign: route to switchModule, never touch inline styles on inner divs
+            if (tab === 'backtest') switchModule('backtester');
+            else if (tab === 'live') switchModule('scanner');
+        }
+
+
+        async function startLiveTrading() {
+            const btn = document.getElementById('startLiveBtn');
+            const loader = document.getElementById('liveLoader');
+            const text = document.getElementById('startLiveText');
+            const progressWrapper = document.getElementById('overallProgressWrapper');
+            const statusBadge = document.getElementById('liveStatusBadge');
+            
+            const selection = document.getElementById('liveCompanySelect').value;
+            let companiesPayload = "ALL";
+            if (selection === "NIFTY50") {
+                companiesPayload = NIFTY_50.join(",");
+            } else if (selection === "NIFTY100") {
+                companiesPayload = NIFTY_100.join(",");
+            } else if (selection === "NIFTY200") {
+                companiesPayload = NIFTY_200.join(",");
+            }
+
+            btn.disabled = true;
+            text.style.display = 'none';
+            loader.style.display = 'block';
+            progressWrapper.style.display = 'block';
+            statusBadge.innerText = 'INITIALIZING';
+            statusBadge.style.background = 'rgba(47, 129, 247, 0.2)';
+            statusBadge.style.color = 'var(--primary)';
+
+            try {
+                const response = await fetch('/api/live-trading/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ companies: companiesPayload })
+                });
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText);
+                }
+                const data = await response.json();
+                pollLiveProgress(data.jobId);
+            } catch (err) {
+                alert("Failed to start live trading: " + err.message);
+                btn.disabled = false;
+                text.style.display = 'block';
+                loader.style.display = 'none';
+                statusBadge.innerText = 'FAILED';
+                statusBadge.style.background = 'rgba(218, 54, 51, 0.2)';
+                statusBadge.style.color = 'var(--danger)';
+            }
+        }
+
+        let livePollInterval = null;
+        async function pollLiveProgress(jobId) {
+            if (livePollInterval) clearInterval(livePollInterval);
+            
+            const statusBadge = document.getElementById('liveStatusBadge');
+            const metricProgress = document.getElementById('liveMetricProgress');
+            const metricSuccess = document.getElementById('liveMetricSuccess');
+            const metricFailed = document.getElementById('liveMetricFailed');
+            const metricRequests = document.getElementById('liveMetricRequests');
+            const progressBar = document.getElementById('liveProgressBar');
+            const progressPercent = document.getElementById('liveProgressPercent');
+            const activeList = document.getElementById('liveActiveList');
+            const errorList = document.getElementById('liveErrorList');
+            const statusNote = document.getElementById('liveProgressStatusNote');
+
+            livePollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/live-trading/status/${jobId}`);
+                    const data = await response.json();
+                    
+                    statusBadge.innerText = data.status.toUpperCase();
+                    if (data.status === 'completed') {
+                        statusBadge.style.background = 'rgba(46, 160, 67, 0.2)';
+                        statusBadge.style.color = 'var(--success)';
+                        statusNote.innerText = 'Session completed successfully.';
+                    } else if (data.status === 'failed') {
+                        statusBadge.style.background = 'rgba(218, 54, 51, 0.2)';
+                        statusBadge.style.color = 'var(--danger)';
+                        statusNote.innerText = 'Session failed.';
+                    } else {
+                        statusBadge.style.background = 'rgba(242, 153, 74, 0.2)';
+                        statusBadge.style.color = '#f2994a';
+                        statusNote.innerText = 'Processing universe...';
+                    }
+
+                    metricProgress.innerText = `${data.completedSymbols} / ${data.totalSymbols}`;
+                    metricSuccess.innerText = data.completedSymbols;
+                    metricFailed.innerText = data.failedSymbols;
+                    metricRequests.innerText = data.totalRequests;
+
+                    const percent = Math.round((data.completedSymbols / data.totalSymbols) * 100) || 0;
+                    progressBar.style.width = percent + '%';
+                    progressPercent.innerText = percent + '%';
+
+                    // Update Lists
+                    let activeHtml = '';
+                    let errorHtml = '';
+                    
+                    const symbols = Object.entries(data.symbols);
+                    symbols.sort((a,b) => {
+                         if (a[1].status === 'failed') return -1;
+                         if (b[1].status === 'failed') return 1;
+                         return 0;
+                    });
+
+                    symbols.forEach(([sym, state]) => {
+                        const itemHtml = `
+                            <div style="padding: 0.6rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight: 700; font-size: 0.85rem;">${sym}</div>
+                                <div style="font-size: 0.75rem; color: ${state.status==='completed' ? 'var(--success)' : state.status==='failed' ? 'var(--danger)' : '#f2994a'}">
+                                    ${state.status.toUpperCase()}
+                                </div>
+                            </div>
+                        `;
+                        if (state.status === 'failed') {
+                            errorHtml += `
+                                <div style="padding: 0.75rem; border-bottom: 1px solid var(--border); background: rgba(218, 54, 51, 0.05);">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom: 0.25rem;">
+                                        <span style="font-weight: 700; color: var(--danger); font-size: 0.85rem;">${sym}</span>
+                                        <span style="font-size: 0.7rem; color: var(--text-muted);">FAILED</span>
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: var(--danger); line-height: 1.2;">${state.error || 'Unknown error'}</div>
+                                </div>
+                            `;
+                        } else if (state.status !== 'queued') {
+                            activeHtml += itemHtml;
+                        }
+                    });
+
+                    activeList.innerHTML = activeHtml || '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">Processing...</div>';
+                    errorList.innerHTML = errorHtml || '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No errors</div>';
+
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        clearInterval(livePollInterval);
+                        document.getElementById('startLiveBtn').disabled = false;
+                        document.getElementById('startLiveText').style.display = 'block';
+                        document.getElementById('liveLoader').style.display = 'none';
+                    }
+                } catch (err) {
+                    console.error("Polling error:", err);
+                }
+            }, 1000);
+        }
+
+        async function runLiveScan() {
+            const btn = document.getElementById('btnRunScan');
+            const loader = document.getElementById('scanLoader');
+            const text = document.getElementById('scanBtnText');
+
+            // Resolve universe
+            const universeVal = document.getElementById('scanUniverse').value;
+            let companiesPayload = 'ALL';
+            if (universeVal === 'NIFTY50') companiesPayload = NIFTY_50.join(',');
+            else if (universeVal === 'NIFTY100') companiesPayload = NIFTY_100.join(',');
+            else if (universeVal === 'NIFTY200') companiesPayload = NIFTY_200.join(',');
+
+            const payload = {
+                companies: companiesPayload,
+                supertrend_period: parseInt(document.getElementById('scanStPeriod').value) || 21,
+                supertrend_multiplier: parseFloat(document.getElementById('scanStMult').value) || 1.5,
+                htf_supertrend_period: 21,
+                htf_supertrend_multiplier: 1.5,
+                rsi_period: parseInt(document.getElementById('scanRsiLtfPeriod').value) || 14,
+                rsi_min: 0,   // Unfiltered at scan level (use Live Filters)
+                rsi_max: 100, // Unfiltered at scan level (use Live Filters)
+                htf_rsi_period: parseInt(document.getElementById('scanRsiHtfPeriod').value) || 14,
+                htf_rsi_min: 0,   // Unfiltered at scan level (use Live Filters)
+                htf_rsi_max: 100, // Unfiltered at scan level (use Live Filters)
+                // Scan filter thresholds — pass-through (Live Filters handle post-scan)
+                min_cmf: -1.0,
+                min_rel_vol: 0,
+                min_atr: 0,
+                min_adx: 0,
+                min_candle_range: 0,
+                max_candle_range: 100,
+                target_level: 5,
+                target_mode: 'fixed',
+                atr_multiplier: 2.0,
+                max_stoploss_pct: 5.0,
+                entry_offset_pct: 0.0,
+            };
+
+            btn.disabled = true;
+            text.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/live-trading/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    alert('Scan failed: ' + err);
+                    return;
+                }
+
+                liveScanResults = await response.json();
+
+                // Show live filter bar
+                document.getElementById('scanLiveFilterBar').style.display = 'block';
+                document.getElementById('scanResultCount').style.display = 'inline';
+                document.getElementById('scanResultCount').innerText = `${liveScanResults.length} signals found`;
+
+                renderScanResults(liveScanResults);
+
+            } catch (err) {
+                alert('Error during scan: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                text.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+
+        function renderScanResults(signals) {
+            const container = document.getElementById('scanResultsContainer');
+            const body = document.getElementById('scanResultsBody');
+            const countEl = document.getElementById('scanFilteredCount');
+
+            container.style.display = 'block';
+            countEl.innerText = `Showing ${signals.length} of ${liveScanResults.length}`;
+
+            if (signals.length === 0) {
+                body.innerHTML = '<tr><td colspan="14" style="padding:2rem; text-align:center; color:var(--text-muted);">No companies match your filters.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = signals.map((sig, idx) => {
+                const ltfUp = sig.in_uptrend_ltf === true;
+                const ltfTrendBadge = sig.in_uptrend_ltf === true
+                    ? (sig.ltf_just_turned_up
+                        ? '<span style="color:#fff; font-weight:700; font-size:0.75rem; background:linear-gradient(90deg,#0e7c3a,#1a9e50); padding:0.15rem 0.5rem; border-radius:12px;">⚡ JUST UP</span>'
+                        : '<span style="color:var(--success); font-weight:700; font-size:0.75rem;">▲ UP</span>')
+                    : '<span style="color:var(--danger); font-weight:700; font-size:0.75rem;">▼ DOWN</span>';
+
+                const htfTrendBadge = sig.in_uptrend_htf === true
+                    ? '<span style="color:var(--success); font-weight:700; font-size:0.75rem;">▲ UP</span>'
+                    : sig.in_uptrend_htf === false
+                    ? '<span style="color:var(--danger); font-weight:700; font-size:0.75rem;">▼ DOWN</span>'
+                    : '<span style="color:var(--text-muted); font-size:0.75rem;">N/A</span>';
+
+                const ema20Badge = sig.price_vs_ema20 === 'Above'
+                    ? '<span style="background:rgba(46,160,67,0.15); color:var(--success); padding:0.15rem 0.4rem; border-radius:4px; font-size:0.72rem;">Above</span>'
+                    : sig.price_vs_ema20 === 'Below'
+                    ? '<span style="background:rgba(218,54,51,0.15); color:var(--danger); padding:0.15rem 0.4rem; border-radius:4px; font-size:0.72rem;">Below</span>'
+                    : '<span style="color:var(--text-muted); font-size:0.72rem;">N/A</span>';
+
+                const stLtf  = sig.supertrend_ltf != null ? '₹' + parseFloat(sig.supertrend_ltf).toFixed(2) : '';
+                const rsi    = sig.rsi     != null ? parseFloat(sig.rsi).toFixed(1)     : 'N/A';
+                const rsiHtf = sig.rsi_HTF != null ? parseFloat(sig.rsi_HTF).toFixed(1) : 'N/A';
+                const cmf    = sig.cmf     != null ? parseFloat(sig.cmf).toFixed(3)     : 'N/A';
+                const relVol = sig.rel_vol != null ? parseFloat(sig.rel_vol).toFixed(2)  : 'N/A';
+                const atr    = sig.atr     != null ? parseFloat(sig.atr).toFixed(2)     : 'N/A';
+                const adx    = sig.adx     != null ? parseFloat(sig.adx).toFixed(1)     : 'N/A';
+                const range  = sig.candle_range_pct != null ? parseFloat(sig.candle_range_pct).toFixed(2) + '%' : 'N/A';
+                const close  = sig.close   != null ? '₹' + parseFloat(sig.close).toFixed(2) : 'N/A';
+
+                const rowStyle = ltfUp ? '' : 'background:rgba(218,54,51,0.04);';
+                const hoverBg  = ltfUp ? 'rgba(255,255,255,0.04)' : 'rgba(218,54,51,0.09)';
+                const rsiColor = sig.rsi != null && parseFloat(sig.rsi) >= 60 ? 'color:var(--success); font-weight:600;' : '';
+                const cmfColor = sig.cmf != null && sig.cmf > 0 ? 'color:var(--success);' : 'color:var(--danger);';
+                const adxColor = sig.adx != null && sig.adx > 25 ? 'color:#ffca28;' : '';
+
+                const rowGlow = sig.ltf_just_turned_up ? 'box-shadow:inset 3px 0 0 #2ea043;' : '';
+                const safeKey = JSON.stringify(sig).replace(/"/g, '&quot;');
+                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05); ${rowStyle} ${rowGlow} transition:background 0.12s; cursor:pointer;" onclick="showStockDetail(liveScanData[${idx}])" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${ltfUp ? '' : 'rgba(218,54,51,0.04)'}'">
+                    <td style="padding:0.6rem 0.7rem; color:var(--text-muted); font-size:0.75rem; width:28px;">${idx + 1}</td>
+                    <td style="padding:0.6rem 0.7rem; font-weight:700; color:var(--primary); white-space:nowrap;">${sig.company}</td>
+                    <td style="padding:0.6rem 0.7rem; color:var(--text-muted); font-size:0.82rem;">${sig.signal_date || 'N/A'}</td>
+                    <td style="padding:0.6rem 0.7rem; font-weight:600;">${close}</td>
+                    <td id="lp-${sig.company}" style="padding:0.6rem 0.7rem; font-weight:700; color:#4ade80; white-space:nowrap; transition:background 0.3s;">—</td>
+                    <td id="tgt-${sig.company}" style="padding:0.6rem 0.7rem; font-weight:600; color:#86efac; white-space:nowrap;" data-entry="${sig.entry || sig.signal_high}">₹${sig.entry ? parseFloat(sig.entry).toFixed(2) : 'N/A'} <span style="font-size:0.7rem; color:#4ade80;">(${parseFloat(document.getElementById('sfTargetPct')?.value||5).toFixed(1)}%)</span></td>
+                    <td id="sl-${sig.company}" style="padding:0.6rem 0.7rem; font-weight:600; color:#fca5a5; white-space:nowrap;" data-entry="${sig.entry || sig.signal_high}" data-candle-low="${sig.signal_low}">₹${sig.Stoploss != null ? parseFloat(sig.Stoploss).toFixed(2) : 'N/A'}</td>
+                    <td style="padding:0.6rem 0.7rem; white-space:nowrap;">${ltfTrendBadge}<br/><small style="color:var(--text-muted); font-size:0.7rem;">${stLtf}</small></td>
+                    <td style="padding:0.6rem 0.7rem; white-space:nowrap;">${htfTrendBadge}</td>
+                    <td style="padding:0.6rem 0.7rem; ${rsiColor}">${rsi}</td>
+                    <td style="padding:0.6rem 0.7rem;">${rsiHtf}</td>
+                    <td style="padding:0.6rem 0.7rem; ${cmfColor}">${cmf}</td>
+                    <td style="padding:0.6rem 0.7rem;">${relVol}</td>
+                    <td style="padding:0.6rem 0.7rem;">${atr}</td>
+                    <td style="padding:0.6rem 0.7rem; ${adxColor}">${adx}</td>
+                    <td style="padding:0.6rem 0.7rem;">${range}</td>
+                    <td style="padding:0.6rem 0.7rem;">${ema20Badge}</td>
+                </tr>`;
+            }).join('');
+
+            // Store filtered list for onclick index mapping
+            window.liveScanData = signals;
+
+            // After rendering, apply any cached live prices
+            for (const [sym, ltp] of Object.entries(livePrices)) {
+                _applyLtpToRow(sym, ltp);
+            }
+            // Recompute targets and stoploss with current user values
+            recomputeTargets();
+            recomputeStoploss();
+        }
+
+        function showStockDetail(sig) {
+            if (!sig) return;
+
+            const ltfUp = sig.in_uptrend_ltf === true;
+            const htfUp = sig.in_uptrend_htf === true;
+            const trendColor  = ltfUp ? 'var(--success)' : 'var(--danger)';
+            const htfColor    = sig.in_uptrend_htf === true ? 'var(--success)' : sig.in_uptrend_htf === false ? 'var(--danger)' : 'var(--text-muted)';
+
+            const fmt  = (v, d=2) => v != null ? parseFloat(v).toFixed(d) : 'N/A';
+            const fmtR = (v, d=2) => v != null ? '₹' + parseFloat(v).toFixed(d) : 'N/A';
+            const fmtP = (v, d=2) => v != null ? parseFloat(v).toFixed(d) + '%' : 'N/A';
+
+            const entry   = sig.entry    != null ? parseFloat(sig.entry)   : null;
+            const target  = sig.Target   != null ? parseFloat(sig.Target)  : null;
+            const sl      = sig.Stoploss != null ? parseFloat(sig.Stoploss): null;
+
+            let rrBadge = '';
+            if (entry && target && sl && entry !== sl) {
+                const reward = target - entry;
+                const risk   = entry - sl;
+                if (risk > 0) {
+                    const rr = reward / risk;
+                    const rrColor = rr >= 2 ? 'var(--success)' : rr >= 1 ? '#ffca28' : 'var(--danger)';
+                    rrBadge = `<span style="background:rgba(255,255,255,0.06); color:${rrColor}; padding:0.25rem 0.7rem; border-radius:20px; font-weight:700; font-size:0.85rem;">R:R ${rr.toFixed(2)}</span>`;
+                }
+            }
+
+            const uptrendPct = (entry && target) ? fmtP(((target-entry)/entry)*100) : 'N/A';
+            const slPct      = (entry && sl)      ? fmtP(((entry-sl)/entry)*100)     : 'N/A';
+
+            document.getElementById('stockDetailContent').innerHTML = `
+                <div style="padding:1.4rem 1.5rem 0.8rem; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid rgba(255,255,255,0.07);">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.7rem; flex-wrap:wrap;">
+                            <span style="font-size:1.5rem; font-weight:800; color:var(--primary);">${sig.company}</span>
+                            ${sig.ltf_just_turned_up
+                                ? `<span style="color:#fff; font-weight:700; font-size:0.85rem; background:linear-gradient(90deg,#0e7c3a,#16a34a); padding:0.25rem 0.75rem; border-radius:20px; animation:pulse 1.5s ease-in-out infinite; box-shadow:0 0 12px rgba(22,163,74,0.5);">⚡ JUST TURNED UP</span>`
+                                : `<span style="color:${trendColor}; font-weight:700; font-size:0.85rem; background:${ltfUp?'rgba(46,160,67,0.12)':'rgba(218,54,51,0.12)'}; padding:0.2rem 0.6rem; border-radius:20px;">${ltfUp ? '▲ LTF UP' : '▼ LTF DOWN'}</span>`
+                            }
+                            <span style="color:${htfColor}; font-weight:700; font-size:0.85rem; background:${htfUp?'rgba(46,160,67,0.1)':sig.in_uptrend_htf===false?'rgba(218,54,51,0.1)':'rgba(255,255,255,0.06)'}; padding:0.2rem 0.6rem; border-radius:20px;">${sig.in_uptrend_htf===true?'▲ HTF UP':sig.in_uptrend_htf===false?'▼ HTF DOWN':'HTF N/A'}</span>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:0.8rem; margin-top:0.3rem;">Date: ${sig.signal_date || 'N/A'} &nbsp;|&nbsp; Close: <strong style="color:var(--text-main);">${fmtR(sig.close)}</strong> &nbsp;|&nbsp; EMA20: <strong style="color:${sig.price_vs_ema20==='Above'?'var(--success)':'var(--danger)'}">${sig.price_vs_ema20 || 'N/A'}</strong></div>
+                    </div>
+                    <button onclick="closeStockDetail()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
+                </div>
+
+                <div style="padding:1rem 1.5rem 0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                    <span style="font-size:0.75rem; color:var(--text-muted);">Risk / Reward:</span>
+                    ${rrBadge || '<span style="color:var(--text-muted); font-size:0.82rem;">N/A</span>'}
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-card" style="border-color:rgba(46,160,67,0.3);">
+                        <div class="dc-label">Entry</div>
+                        <div class="dc-value" style="color:#fff;">${fmtR(sig.entry)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">High of signal candle</div>
+                    </div>
+                    <div class="detail-card" style="border-color:rgba(46,160,67,0.5);">
+                        <div class="dc-label">Target</div>
+                        <div class="dc-value" style="color:var(--success);">${fmtR(sig.Target)}</div>
+                        <div style="font-size:0.72rem; color:var(--success); margin-top:0.2rem;">+${uptrendPct} upside</div>
+                    </div>
+                    <div class="detail-card" style="border-color:rgba(218,54,51,0.4);">
+                        <div class="dc-label">Stoploss</div>
+                        <div class="dc-value" style="color:var(--danger);">${fmtR(sig.Stoploss)}</div>
+                        <div style="font-size:0.72rem; color:var(--danger); margin-top:0.2rem;">-${slPct} risk</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">Supertrend LTF</div>
+                        <div class="dc-value" style="color:#58a6ff;">${fmtR(sig.supertrend_ltf)}</div>
+                        <div style="font-size:0.72rem; color:${trendColor}; margin-top:0.2rem;">${ltfUp ? '▲ Uptrend' : '▼ Downtrend'}</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">RSI (LTF)</div>
+                        <div class="dc-value" style="color:${sig.rsi>=70?'var(--success)':sig.rsi<=30?'var(--danger)':'#ffca28'};">${fmt(sig.rsi, 1)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">${sig.rsi>=70?'Overbought':sig.rsi<=30?'Oversold':'Neutral'}</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">RSI (HTF)</div>
+                        <div class="dc-value" style="color:${sig.rsi_HTF>=70?'var(--success)':sig.rsi_HTF<=30?'var(--danger)':'#ffca28'};">${fmt(sig.rsi_HTF, 1)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Weekly RSI</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">CMF</div>
+                        <div class="dc-value" style="color:${sig.cmf>0?'var(--success)':'var(--danger)'};">${fmt(sig.cmf, 3)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">${sig.cmf>0?'Bullish flow':'Bearish flow'}</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">Relative Volume</div>
+                        <div class="dc-value" style="color:${sig.rel_vol>=1.5?'var(--success)':'#fff'};">${fmt(sig.rel_vol, 2)}x</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">${sig.rel_vol>=1.5?'High volume':'Normal volume'}</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">ATR</div>
+                        <div class="dc-value">₹${fmt(sig.atr)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">Avg True Range</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">ADX</div>
+                        <div class="dc-value" style="color:${sig.adx>25?'#ffca28':'#fff'};">${fmt(sig.adx, 1)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">${sig.adx>25?'Strong trend':'Weak trend'}</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">Candle Range</div>
+                        <div class="dc-value">${fmtP(sig.candle_range_pct)}</div>
+                        <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">H-L / Open</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="dc-label">EMA 20</div>
+                        <div class="dc-value">${fmtR(sig.ema_20)}</div>
+                        <div style="font-size:0.72rem; color:${sig.price_vs_ema20==='Above'?'var(--success)':'var(--danger)'}; margin-top:0.2rem;">Price ${sig.price_vs_ema20 || 'N/A'} EMA</div>
+                    </div>
+                </div>
+
+                <div style="padding:0.5rem 1.5rem 1.2rem; display:flex; gap:0.8rem;">
+                    <div style="flex:1; background:rgba(255,255,255,0.03); border-radius:8px; padding:0.8rem 1rem;">
+                        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.4rem;">OHLC (Signal Candle)</div>
+                        <div style="display:flex; gap:1.2rem; font-size:0.82rem;">
+                            <span>O: <strong>${fmtR(sig.signal_open)}</strong></span>
+                            <span>H: <strong style="color:var(--success);">${fmtR(sig.signal_high)}</strong></span>
+                            <span>L: <strong style="color:var(--danger);">${fmtR(sig.signal_low)}</strong></span>
+                            <span>C: <strong>${fmtR(sig.signal_close)}</strong></span>
+                        </div>
+                    </div>
+                </div>`;
+
+            const overlay = document.getElementById('stockDetailOverlay');
+            overlay.style.display = 'flex';
+            // Reset animation
+            const modal = document.getElementById('stockDetailModal');
+            modal.style.animation = 'none';
+            modal.offsetHeight; // reflow
+            modal.style.animation = 'slideUp 0.22s ease';
+        }
+
+        function closeStockDetail(e) {
+            if (!e || e.target === document.getElementById('stockDetailOverlay')) {
+                document.getElementById('stockDetailOverlay').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('stockDetailOverlay').style.display = 'none'; });
+
+        // ── Live Price WebSocket ────────────────────────────────────────────
+        const livePrices = {};   // {symbol: ltp}
+        let liveWs = null;
+        let _liveWsActive = false;
+
+        function _setWsStatus(state) {
+            const dot   = document.getElementById('liveWsStatus');
+            const label = document.getElementById('liveWsLabel');
+            const btn   = document.getElementById('btnLivePrices');
+            if (!dot) return;
+            if (state === 'connected') {
+                dot.style.background = '#4ade80';
+                label.textContent = 'Live prices: On';
+                label.style.color = '#4ade80';
+                btn.textContent = 'Disconnect';
+            } else if (state === 'connecting') {
+                dot.style.background = '#ffca28';
+                label.textContent = 'Live prices: Connecting…';
+                label.style.color = '#ffca28';
+                btn.textContent = 'Connecting…';
+            } else {
+                dot.style.background = '#555';
+                label.textContent = 'Live prices: Off';
+                label.style.color = 'var(--text-muted)';
+                btn.textContent = 'Connect';
+            }
+        }
+
+        function _applyLtpToRow(symbol, ltp) {
+            const cell = document.getElementById(`lp-${symbol}`);
+            if (!cell) return;
+            const prev = parseFloat(cell.dataset.prev || ltp);
+            cell.dataset.prev = ltp;
+            cell.textContent = '₹' + ltp.toFixed(2);
+            const flash = ltp >= prev ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)';
+            cell.style.background = flash;
+            setTimeout(() => { cell.style.background = 'transparent'; }, 600);
+        }
+
+        function recomputeTargets() {
+            const pct = parseFloat(document.getElementById('sfTargetPct')?.value || 5) || 5;
+            document.querySelectorAll('[id^="tgt-"]').forEach(cell => {
+                const entry = parseFloat(cell.dataset.entry);
+                if (!isNaN(entry) && entry > 0) {
+                    const target = entry * (1 + pct / 100);
+                    cell.innerHTML = `₹${target.toFixed(2)} <span style="font-size:0.7rem; color:#4ade80;">(${pct.toFixed(1)}%)</span>`;
+                }
+            });
+            // Also update in-memory scan results so modal shows correct value
+            if (window.liveScanData) {
+                window.liveScanData.forEach(sig => {
+                    if (sig.entry) sig.Target = parseFloat((parseFloat(sig.entry) * (1 + pct / 100)).toFixed(2));
+                });
+            }
+            if (liveScanResults) {
+                liveScanResults.forEach(sig => {
+                    if (sig.entry) sig.Target = parseFloat((parseFloat(sig.entry) * (1 + pct / 100)).toFixed(2));
+                });
+            }
+        }
+
+        function connectLivePrices() {
+            if (!window.liveScanData || window.liveScanData.length === 0) {
+                alert('Run a scan first so we know which symbols to subscribe to.');
+                return;
+            }
+            const symbols = [...new Set(window.liveScanData.map(s => s.company))];
+            _setWsStatus('connecting');
+            const wsUrl = `ws://${location.host}/ws/live-prices`;
+            liveWs = new WebSocket(wsUrl);
+
+            liveWs.onopen = () => {
+                liveWs.send(JSON.stringify({ symbols }));
+                _setWsStatus('connected');
+                _liveWsActive = true;
+                console.log(`Live prices: subscribed to ${symbols.length} symbols`);
+            };
+
+            liveWs.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'ping') return;
+                    if (msg.error) { console.warn('Live feed:', msg.error); return; }
+                    if (msg.symbol && msg.ltp != null) {
+                        livePrices[msg.symbol] = msg.ltp;
+                        _applyLtpToRow(msg.symbol, msg.ltp);
+                    }
+                } catch(err) { console.error('WS parse error', err); }
+            };
+
+            liveWs.onerror = (e) => {
+                console.error('Live price WS error', e);
+                _setWsStatus('off');
+                _liveWsActive = false;
+            };
+
+            liveWs.onclose = () => {
+                _setWsStatus('off');
+                _liveWsActive = false;
+                console.log('Live price WS closed');
+            };
+        }
+
+        function disconnectLivePrices() {
+            if (liveWs) { liveWs.close(); liveWs = null; }
+            _liveWsActive = false;
+            _setWsStatus('off');
+        }
+
+        function toggleLivePrices() {
+            if (_liveWsActive) disconnectLivePrices();
+            else connectLivePrices();
+        }
+        // ── End Live Price WebSocket ────────────────────────────────────────
+
+        function recomputeStoploss() {
+            const slPct = parseFloat(document.getElementById('sfSlPct')?.value || 5) || 5;
+            document.querySelectorAll('[id^="sl-"]').forEach(cell => {
+                const entry    = parseFloat(cell.dataset.entry);
+                const candleLow = parseFloat(cell.dataset.candleLow);
+                if (!isNaN(entry) && entry > 0) {
+                    const fixedSl = entry * (1 - slPct / 100);
+                    const sl = Math.max(
+                        isNaN(candleLow) ? fixedSl : candleLow,
+                        fixedSl
+                    );
+                    cell.textContent = '₹' + sl.toFixed(2);
+                }
+            });
+            // Update in-memory data so modal shows correct SL
+            const slUpdater = (sig) => {
+                if (sig.entry && sig.signal_low != null) {
+                    const entry = parseFloat(sig.entry);
+                    const fixedSl = entry * (1 - slPct / 100);
+                    sig.Stoploss = parseFloat(Math.max(parseFloat(sig.signal_low), fixedSl).toFixed(2));
+                }
+            };
+            if (window.liveScanData)  window.liveScanData.forEach(slUpdater);
+            if (liveScanResults)      liveScanResults.forEach(slUpdater);
+        }
+
+        function applyScanFilters() {
+            if (liveScanResults.length === 0) return;
+
+            const sfLtfMin  = document.getElementById('sfLtfMin').value  !== '' ? parseFloat(document.getElementById('sfLtfMin').value)  : null;
+            const sfLtfMax  = document.getElementById('sfLtfMax').value  !== '' ? parseFloat(document.getElementById('sfLtfMax').value)  : null;
+            const sfHtfMin  = document.getElementById('sfHtfMin').value  !== '' ? parseFloat(document.getElementById('sfHtfMin').value)  : null;
+            const sfHtfMax  = document.getElementById('sfHtfMax').value  !== '' ? parseFloat(document.getElementById('sfHtfMax').value)  : null;
+            const sfCmf     = document.getElementById('sfCmf').value     !== '' ? parseFloat(document.getElementById('sfCmf').value)     : null;
+            const sfRelVol  = document.getElementById('sfRelVol').value  !== '' ? parseFloat(document.getElementById('sfRelVol').value)  : null;
+            const sfAtr     = document.getElementById('sfAtr').value     !== '' ? parseFloat(document.getElementById('sfAtr').value)     : null;
+            const sfAdx     = document.getElementById('sfAdx').value     !== '' ? parseFloat(document.getElementById('sfAdx').value)     : null;
+            const sfRangeMin= document.getElementById('sfRangeMin').value!== '' ? parseFloat(document.getElementById('sfRangeMin').value): null;
+            const sfRangeMax= document.getElementById('sfRangeMax').value!== '' ? parseFloat(document.getElementById('sfRangeMax').value): null;
+            const sfEma      = document.getElementById('sfEma').value;
+            const sfLtfTrend = document.getElementById('sfLtfTrend') ? document.getElementById('sfLtfTrend').value : 'ALL';
+            const sfHtfTrend = document.getElementById('sfHtfTrend').value;
+
+            const filtered = liveScanResults.filter(sig => {
+                const rsi    = sig.rsi     != null ? parseFloat(sig.rsi)     : null;
+                const rsiHtf = sig.rsi_HTF != null ? parseFloat(sig.rsi_HTF) : null;
+                const cmf    = sig.cmf     != null ? parseFloat(sig.cmf)     : null;
+                const relVol = sig.rel_vol != null ? parseFloat(sig.rel_vol) : null;
+                const atr    = sig.atr     != null ? parseFloat(sig.atr)     : null;
+                const adx    = sig.adx     != null ? parseFloat(sig.adx)     : null;
+                const range  = sig.candle_range_pct != null ? parseFloat(sig.candle_range_pct) : null;
+
+                if (sfLtfMin  !== null && (rsi    === null || rsi    < sfLtfMin))  return false;
+                if (sfLtfMax  !== null && (rsi    === null || rsi    > sfLtfMax))  return false;
+                if (sfHtfMin  !== null && (rsiHtf === null || rsiHtf < sfHtfMin))  return false;
+                if (sfHtfMax  !== null && (rsiHtf === null || rsiHtf > sfHtfMax))  return false;
+                if (sfCmf     !== null && (cmf    === null || cmf    < sfCmf))     return false;
+                if (sfRelVol  !== null && (relVol === null || relVol < sfRelVol))  return false;
+                if (sfAtr     !== null && (atr    === null || atr    < sfAtr))     return false;
+                if (sfAdx     !== null && (adx    === null || adx    < sfAdx))     return false;
+                if (sfRangeMin !== null && (range  === null || range  < sfRangeMin)) return false;
+                if (sfRangeMax !== null && (range  === null || range  > sfRangeMax)) return false;
+                if (sfEma !== 'ALL' && sig.price_vs_ema20 !== sfEma) return false;
+                if (sfLtfTrend === 'JUST_TURNED_UP' && !sig.ltf_just_turned_up) return false;
+                if (sfLtfTrend === 'UPTREND'        && sig.in_uptrend_ltf !== true)  return false;
+                if (sfLtfTrend === 'DOWNTREND'      && sig.in_uptrend_ltf !== false) return false;
+                if (sfHtfTrend === 'UPTREND'        && sig.in_uptrend_htf !== true)  return false;
+                if (sfHtfTrend === 'DOWNTREND'      && sig.in_uptrend_htf !== false) return false;
+                return true;
+            });
+
+            renderScanResults(filtered);
+        }
+
+        function resetScanFilters() {
+            ['sfLtfMin','sfLtfMax','sfHtfMin','sfHtfMax','sfCmf','sfRelVol','sfAtr','sfAdx','sfRangeMin','sfRangeMax'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('sfEma').value = 'ALL';
+            if (document.getElementById('sfLtfTrend')) document.getElementById('sfLtfTrend').value = 'ALL';
+            document.getElementById('sfHtfTrend').value = 'ALL';
+            if (document.getElementById('sfTargetPct')) document.getElementById('sfTargetPct').value = '5';
+            if (document.getElementById('sfSlPct'))    document.getElementById('sfSlPct').value    = '5';
+            renderScanResults(liveScanResults);
+        }
+
+
+        async function runBacktest(payload) {
+            const btn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btnText');
+            const status = document.getElementById('progressStatus');
+            
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            status.style.display = 'block';
+            status.innerText = 'Initializing...';
+            document.getElementById('resultsPanel').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    alert(`Error: ${response.status}\n${errText}`);
+                    return;
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let activeCompanies = [];
+                let completedCount = 0;
+                let totalCompanies = 0;
+                let timeTaken = 0;
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+                                if (data.type === 'start') {
+                                    totalCompanies = data.total;
+                                    status.innerText = `Starting backtest for ${totalCompanies} companies...`;
+                                } else if (data.type === 'started') {
+                                    activeCompanies.push(data.company);
+                                    updateProgressUI();
+                                } else if (data.type === 'finished') {
+                                    activeCompanies = activeCompanies.filter(c => c !== data.company);
+                                    completedCount++;
+                                    updateProgressUI();
+                                } else if (data.type === 'complete') {
+                                    allSignals = data.signals || [];
+                                    currentTimeTaken = (data.metrics && data.metrics.time_taken_seconds) || 0;
+                                    
+                                    // Sync live filters
+                                    document.getElementById('filterLtfMin').value = payload.rsi_ltf_min;
+                                    document.getElementById('filterLtfMax').value = payload.rsi_ltf_max;
+                                    document.getElementById('filterHtfMin').value = payload.rsi_htf_min;
+                                    document.getElementById('filterHtfMax').value = payload.rsi_htf_max;
+
+                                    renderResults();
+                                    document.getElementById('resultsPanel').style.display = 'block';
+                                }
+                            } catch (e) {
+                                console.error('Error parsing SSE data:', e);
+                            }
+                        }
+                    }
+                }
+
+                function updateProgressUI() {
+                    const activeText = activeCompanies.length > 0 ? `<br><small style="opacity:0.8">Processing: ${activeCompanies.join(', ')}</small>` : '';
+                    status.innerHTML = `Completed: ${completedCount}/${totalCompanies}${activeText}`;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                loader.style.display = 'none';
+                status.style.display = 'none';
+            }
+        }
+
+        document.getElementById('backtestForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            try {
+                const payload = {
+                    companies: document.getElementById('companySelect').value,
+                    start_date: document.getElementById('startDate').value,
+                    end_date: document.getElementById('endDate').value,
+                    ltf: document.getElementById('ltfSelect').value,
+                    htf: document.getElementById('htfSelect').value,
+                    supertrend_period: parseInt(document.getElementById('stPeriod').value),
+                    supertrend_multiplier: parseFloat(document.getElementById('stMult').value),
+                    htf_supertrend_period: parseInt(document.getElementById('stHtfPeriod').value),
+                    htf_supertrend_multiplier: parseFloat(document.getElementById('stHtfMult').value),
+                    rsi_ltf_period: parseInt(document.getElementById('rsiLtf').value),
+                    rsi_ltf_min: parseFloat(document.getElementById('rsiLtfMin').value),
+                    rsi_ltf_max: parseFloat(document.getElementById('rsiLtfMax').value),
+                    rsi_htf_period: parseInt(document.getElementById('rsiHtf').value),
+                    rsi_htf_min: parseFloat(document.getElementById('rsiHtfMin').value),
+                    rsi_htf_max: parseFloat(document.getElementById('rsiHtfMax').value),
+                    target_level: parseInt(document.getElementById('targetLevel').value) || 10,
+                    look_forward_limit: parseInt(document.getElementById('lookForwardLimit').value),
+                    max_stoploss_pct: parseFloat(document.getElementById('maxStoploss').value),
+                    max_parallel: parseInt(document.getElementById('maxParallel').value) || 4,
+                    target_mode: document.querySelector('input[name="targetMode"]:checked') ? document.querySelector('input[name="targetMode"]:checked').value : 'fixed',
+                    atr_multiplier: parseFloat(document.getElementById('atrMultiplier').value) || 2.0,
+                    entry_offset_pct: parseFloat(document.getElementById('entryOffset').value) || 0.0
+                };
+                runBacktest(payload);
+            } catch (err) {
+                alert("Submit Error: " + err.message);
+                console.error(err);
+            }
+        });
+
+        function renderResults() {
+            try {
+                if (!allSignals) allSignals = [];
+            const lMin = parseFloat(document.getElementById('filterLtfMin').value) || 0;
+            const lMax = parseFloat(document.getElementById('filterLtfMax').value) || 100;
+            const hMin = parseFloat(document.getElementById('filterHtfMin').value) || 0;
+            const hMax = parseFloat(document.getElementById('filterHtfMax').value) || 100;
+            
+            const cmfMinStr = document.getElementById('filterCmf').value;
+            const cmfMin = cmfMinStr !== '' ? parseFloat(cmfMinStr) : null;
+            
+            const relVolMinStr = document.getElementById('filterRelVol').value;
+            const relVolMin = relVolMinStr !== '' ? parseFloat(relVolMinStr) : null;
+            
+            const atrMinStr = document.getElementById('filterAtr').value;
+            const atrMin = atrMinStr !== '' ? parseFloat(atrMinStr) : null;
+            
+            const adxMinStr = document.getElementById('filterAdx').value;
+            const adxMin = adxMinStr !== '' ? parseFloat(adxMinStr) : null;
+            
+            const rangeMin = parseFloat(document.getElementById('filterRangeMin').value) || 0;
+            const rangeMax = parseFloat(document.getElementById('filterRangeMax').value) || 1000;
+            const bodyMin = parseFloat(document.getElementById('filterBodyMin').value) || 0;
+            const bodyMax = parseFloat(document.getElementById('filterBodyMax').value) || 1000;
+            
+            const maxHighThresholdStr = document.getElementById('filterMaxHigh').value;
+            const maxHighThreshold = maxHighThresholdStr !== '' ? parseFloat(maxHighThresholdStr) : null;
+
+            const maxHighLfThresholdStr = document.getElementById('filterMaxHighLf').value;
+            const maxHighLfThreshold = maxHighLfThresholdStr !== '' ? parseFloat(maxHighLfThresholdStr) : null;
+
+            const closeLfThresholdStr = document.getElementById('filterCloseLf').value;
+            const closeLfThreshold = closeLfThresholdStr !== '' ? parseFloat(closeLfThresholdStr) : null;
+
+            const emaFilter = document.getElementById('filterEma').value;
+            const htfTrendFilter = document.getElementById('filterHtfTrend').value;
+            const niftyIndexFilter = document.getElementById('filterNiftyIndex').value;
+
+            let failedLfSignals = []; // Array to store trades that fail the Close LF filter
+
+            filteredSignals = allSignals.filter(s => {
+                if (!s) return false;
+                const rsiL = s.rsi || 0;
+                const rsiH = s.rsi_HTF || 0;
+                const sCmf = s.cmf != null ? s.cmf : 0;
+                const sRelVol = s.rel_vol != null ? s.rel_vol : 0;
+                const sAtr = s.atr != null ? s.atr : 0;
+                const sAdx = s.adx != null ? s.adx : 0;
+                const maxHP = s.max_high_pct != null ? s.max_high_pct : 0;
+                
+                let pass = rsiL >= lMin && rsiL <= lMax && rsiH >= hMin && rsiH <= hMax;
+                if (cmfMin !== null && s.cmf != null && sCmf < cmfMin) pass = false;
+                if (relVolMin !== null && s.rel_vol != null && sRelVol < relVolMin) pass = false;
+                if (atrMin !== null && s.atr != null && sAtr < atrMin) pass = false;
+                if (adxMin !== null && s.adx != null && sAdx < adxMin) pass = false;
+
+                // Candle Intensity Calculations
+                if (s.signal_open && s.signal_open > 0) {
+                    const cRange = ((s.signal_high - s.signal_low) / s.signal_open) * 100;
+                    const cBody = (Math.abs(s.signal_open - s.signal_close) / s.signal_open) * 100;
+                    if (cRange < rangeMin || cRange > rangeMax) pass = false;
+                    if (cBody < bodyMin || cBody > bodyMax) pass = false;
+                }
+
+                // Max High Filter (if used)
+                if (maxHighThreshold !== null) {
+                    if (maxHP > maxHighThreshold) pass = false;
+                }
+                
+                // Max High Lookforward Filter
+                if (maxHighLfThreshold !== null) {
+                    const maxHPLf = s.max_high_lookahead_pct != null ? s.max_high_lookahead_pct : 0;
+                    if (maxHPLf <= maxHighLfThreshold) pass = false;
+                }
+                
+                if (emaFilter !== 'ALL') {
+                    if (s.price_vs_ema20 !== emaFilter) pass = false;
+                }
+                
+                if (htfTrendFilter !== 'ALL') {
+                    if (htfTrendFilter === 'UPTREND' && s.in_uptrend_htf !== true) pass = false;
+                    if (htfTrendFilter === 'DOWNTREND' && s.in_uptrend_htf === true) pass = false;
+                }
+                
+                if (niftyIndexFilter !== 'ALL') {
+                    if (niftyIndexFilter === 'NIFTY50' && !NIFTY_50.includes(s.company)) pass = false;
+                    if (niftyIndexFilter === 'NIFTY100' && !NIFTY_100.includes(s.company)) pass = false;
+                    if (niftyIndexFilter === 'NIFTY200' && !NIFTY_200.includes(s.company)) pass = false;
+                }
+                
+                // If it fails any standard filter, discard it immediately.
+                if (!pass) return false;
+
+                // Close Lookforward Filter (Applied LAST to capture strictly discarded trades)
+                if (closeLfThreshold !== null) {
+                    const cLfPct = s.close_lookahead_pct != null ? s.close_lookahead_pct : -999;
+                    if (cLfPct <= closeLfThreshold) {
+                        failedLfSignals.push(s);
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Calculate Metrics
+            const total = filteredSignals.length;
+            const targetHits = filteredSignals.filter(s => s.target_hit);
+            const stoplossHits = filteredSignals.filter(s => s.stoploss_hit);
+            
+            const winRate = total > 0 ? (targetHits.length / total * 100) : 0;
+            
+            const sumTargetHitPct = targetHits.reduce((acc, s) => acc + (s.target_hit_metrics || 0), 0);
+            const sumStoplossHitPct = stoplossHits.reduce((acc, s) => acc + Math.abs(s.stoploss_hit_metrics || 0), 0);
+            
+            const posExcTarget = filteredSignals.filter(s => !s.target_hit && (s.expired_metrics || 0) > 0);
+            const negExcStoploss = filteredSignals.filter(s => !s.stoploss_hit && (s.expired_metrics || s.stoploss_hit_metrics || 0) < 0);
+            
+            const sumPosPct = sumTargetHitPct + posExcTarget.reduce((acc, s) => acc + (s.expired_metrics || 0), 0);
+            const sumNegPct = sumStoplossHitPct + negExcStoploss.reduce((acc, s) => acc + Math.abs(s.expired_metrics || s.stoploss_hit_metrics || 0), 0);
+
+            const netProfit = sumPosPct - sumNegPct;
+            const avgReturn = total > 0 ? (netProfit / total) : 0;
+
+            // Update UI Cards
+            document.getElementById('resTotal').innerText = total;
+            document.getElementById('resTimeTaken').innerText = currentTimeTaken + 's';
+            document.getElementById('resWinRate').innerText = winRate.toFixed(2) + '%';
+            document.getElementById('resAvgReturn').innerText = avgReturn.toFixed(2) + '%';
+            document.getElementById('resTargetHits').innerText = `${targetHits.length} / ${sumTargetHitPct.toFixed(2)}%`;
+            document.getElementById('resStoplossHits').innerText = `${stoplossHits.length} / ${sumStoplossHitPct.toFixed(2)}%`;
+            document.getElementById('resNetProfit').innerText = netProfit.toFixed(2) + '%';
+            document.getElementById('resSumPosNeg').innerText = `${sumPosPct.toFixed(2)} / ${sumNegPct.toFixed(2)}`;
+            document.getElementById('resPosExcTarget').innerText = posExcTarget.length;
+            document.getElementById('resNegExcStoploss').innerText = negExcStoploss.length;
+            
+            const slsInLookforward = filteredSignals.filter(s => s.sl_hit_lookahead).length;
+            document.getElementById('resSlHitLookforward').innerText = slsInLookforward;
+
+            // Optimization Metrics
+            if (maxHighThreshold !== null) {
+                const avoidedSL = allSignals.filter(s => s && s.max_high_pct !== undefined && s.max_high_pct < maxHighThreshold && s.stoploss_hit).length;
+                const retainedTarget = allSignals.filter(s => s && s.max_high_pct !== undefined && s.max_high_pct >= maxHighThreshold && s.target_hit).length;
+                document.getElementById('optAvoidedSL').innerText = avoidedSL;
+                document.getElementById('optRetainedTarget').innerText = retainedTarget;
+            } else {
+                document.getElementById('optAvoidedSL').innerText = '0';
+                document.getElementById('optRetainedTarget').innerText = targetHits.length;
+            }
+
+            // Update Look Forward Simulation Dashboard
+            const lfDash = document.getElementById('lfSimulationDashboard');
+            if (closeLfThreshold !== null) {
+                lfDash.style.display = 'block';
+                const lfTotal = failedLfSignals.length;
+                let lfWins = 0;
+                let sumLfPct = 0;
+                
+                failedLfSignals.forEach(s => {
+                    const pct = s.close_lookahead_pct != null ? s.close_lookahead_pct : 0;
+                    if (pct > 0) lfWins++;
+                    sumLfPct += pct;
+                });
+                
+                const lfWinRate = lfTotal > 0 ? (lfWins / lfTotal) * 100 : 0;
+                const lfAvgReturn = lfTotal > 0 ? sumLfPct / lfTotal : 0;
+                
+                document.getElementById('lfSimTotal').innerText = lfTotal;
+                document.getElementById('lfSimWinRate').innerText = lfWinRate.toFixed(2) + '%';
+                document.getElementById('lfSimNetProfit').innerText = sumLfPct.toFixed(2) + '%';
+                document.getElementById('lfSimAvgReturn').innerText = lfAvgReturn.toFixed(2) + '%';
+            } else {
+                lfDash.style.display = 'none';
+            }
+
+            renderAnalysis(currentAnalysisTab); // Update Dashboard
+
+            // Reset Table
+            const tbody = document.getElementById('tradesTable');
+            const logContainer = document.getElementById('tradeLogs');
+            tbody.innerHTML = '';
+            logContainer.innerHTML = '';
+            logContainer.setAttribute('data-rendered', 'false'); // Lazy load logs
+            
+            // Hide logs if shown
+            document.getElementById('tradeLogs').style.display = 'none';
+            document.getElementById('tradeLogsBtn').innerText = 'Show Details';
+
+            currentPage = 1;
+            renderNextPage();
+            } catch (err) {
+                console.error("Render Results Error:", err);
+                alert("An error occurred while rendering results: " + err.message + "\nCheck console for more details.");
+            }
+        }
+
+        function renderNextPage() {
+            const tbody = document.getElementById('tradesTable');
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            
+            if (filteredSignals.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">No results matching current filters.</td></tr>';
+                document.getElementById('loadMoreContainer').style.display = 'none';
+                return;
+            }
+            
+            const pageData = filteredSignals.slice(start, end);
+            
+            if (pageData.length === 0) {
+                document.getElementById('loadMoreContainer').style.display = 'none';
+                return;
+            }
+
+            const rows = [];
+            pageData.forEach(s => {
+                if (!s) return;
+                let statusHtml = '';
+                if (s.target_hit) statusHtml = `<span class="status-win">Target Hit (${parseFloat(s.target_hit_metrics || 0).toFixed(2)}%)</span>`;
+                else if (s.stoploss_hit) statusHtml = `<span class="status-loss">Stoploss Hit (${parseFloat(s.stoploss_hit_metrics || 0).toFixed(2)}%)</span>`;
+                else {
+                    const val = parseFloat(s.expired_metrics || 0);
+                    statusHtml = `<span class="${val > 0 ? 'status-win' : 'status-loss'}">${s.exit_reason || 'Expired'} (${val.toFixed(2)}%)</span>`;
+                }
+
+                rows.push(`
+                    <tr>
+                        <td><strong>${s.company || 'N/A'}</strong></td>
+                        <td>${(s.entry_time || 'N/A').split(' ')[0]}<br><small>@ ${s.entry != null ? parseFloat(s.entry).toFixed(2) : 'N/A'}</small></td>
+                        <td>${s.exit_time ? s.exit_time.split(' ')[0] : 'N/A'}</td>
+                        <td>${s.effective_target_pct != null ? parseFloat(s.effective_target_pct).toFixed(2) + '%' : (s.Target != null ? parseFloat(s.Target).toFixed(2) : 'N/A')}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `);
+            });
+
+            // Efficiently append new rows
+            const tempDiv = document.createElement('tbody');
+            tempDiv.innerHTML = rows.join('');
+            while (tempDiv.firstChild) {
+                tbody.appendChild(tempDiv.firstChild);
+            }
+
+            currentPage++;
+            
+            // Show/Hide Load More
+            const loadMore = document.getElementById('loadMoreContainer');
+            if (end < filteredSignals.length) {
+                loadMore.style.display = 'block';
+            } else {
+                loadMore.style.display = 'none';
+            }
+        }
+
+        function renderAnalysis(type) {
+            currentAnalysisTab = type;
+            
+            // Update Tab Styles
+            ['year', 'month', 'company'].forEach(t => {
+                const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (btn) {
+                    if (t === type) {
+                        btn.style.backgroundColor = 'var(--primary)';
+                        btn.style.color = '#fff';
+                        btn.style.borderColor = 'var(--primary)';
+                    } else {
+                        btn.style.backgroundColor = 'transparent';
+                        btn.style.color = 'var(--text-main)';
+                        btn.style.borderColor = 'var(--border)';
+                    }
+                }
+            });
+
+            const groups = {};
+            
+            filteredSignals.forEach(s => {
+                let key = '';
+                if (!s.entry_time) key = 'Unknown';
+                else if (type === 'year') {
+                    key = new Date(s.entry_time).getFullYear().toString();
+                } else if (type === 'month') {
+                    const d = new Date(s.entry_time);
+                    if (isNaN(d.getTime())) key = 'Unknown';
+                    else {
+                        const y = d.getFullYear();
+                        const m = (d.getMonth() + 1).toString().padStart(2, '0');
+                        key = `${y}-${m}`;
+                    }
+                } else if (type === 'company') {
+                    key = s.company || 'Unknown';
+                }
+
+                if (!key || key === 'NaN' || key === 'NaN-NaN') key = 'Unknown';
+
+                if (!groups[key]) {
+                    groups[key] = {
+                        key: key,
+                        trades: 0,
+                        wins: 0,
+                        target_hits: 0,
+                        stoploss_hits: 0,
+                        sum_target_hit_pct: 0,
+                        sum_stoploss_hit_pct: 0,
+                        sum_pos_exc: 0,
+                        sum_neg_exc: 0
+                    };
+                }
+
+                groups[key].trades++;
+                if (s.target_hit || (s.expired_metrics || 0) > 0) groups[key].wins++;
+                if (s.target_hit) {
+                    groups[key].target_hits++;
+                    groups[key].sum_target_hit_pct += (s.target_hit_metrics || 0);
+                } else if (s.stoploss_hit) {
+                    groups[key].stoploss_hits++;
+                    groups[key].sum_stoploss_hit_pct += Math.abs(s.stoploss_hit_metrics || 0);
+                } else {
+                    const val = s.expired_metrics || 0;
+                    if (val > 0) groups[key].sum_pos_exc += val;
+                    else groups[key].sum_neg_exc += Math.abs(val);
+                }
+            });
+
+            // Convert to array and sort
+            const sortedGroups = Object.values(groups).sort((a, b) => {
+                if (type === 'year' || type === 'month') {
+                    return b.key.localeCompare(a.key); // Descending chronologically
+                }
+                return a.key.localeCompare(b.key); // Ascending alphabetically
+            });
+
+            const tbody = document.getElementById('analysisTableBody');
+            
+            if (sortedGroups.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No data to display.</td></tr>';
+                return;
+            }
+
+            const rows = [];
+            sortedGroups.forEach(g => {
+                const winRate = (g.wins / g.trades * 100) || 0;
+                
+                const sumPos = g.sum_target_hit_pct + g.sum_pos_exc;
+                const sumNeg = g.sum_stoploss_hit_pct + g.sum_neg_exc;
+                const netProfit = sumPos - sumNeg;
+                
+                const avgReturn = (netProfit / g.trades) || 0;
+
+                const wrClass = winRate >= 50 ? 'status-win' : 'status-loss';
+                const retClass = avgReturn > 0 ? 'status-win' : (avgReturn < 0 ? 'status-loss' : '');
+
+                rows.push(`
+                    <tr>
+                        <td style="font-weight: 600;">${g.key}</td>
+                        <td>${g.trades}</td>
+                        <td><span class="${wrClass}">${winRate.toFixed(2)}%</span></td>
+                        <td><span class="${retClass}">${avgReturn.toFixed(2)}%</span></td>
+                        <td style="color: var(--success);">${g.target_hits}</td>
+                        <td style="color: var(--danger);">${g.stoploss_hits}</td>
+                    </tr>
+                `);
+            });
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        function renderTradeLogs() {
+            const logContainer = document.getElementById('tradeLogs');
+            if (logContainer.getAttribute('data-rendered') === 'true') return;
+
+            const logChunks = [];
+            filteredSignals.forEach(s => {
+                const metric = s.target_hit ? s.target_hit_metrics : (s.stoploss_hit ? s.stoploss_hit_metrics : s.expired_metrics);
+                const outcomeStr = s.exit_reason ? `${s.exit_reason.toUpperCase()} (${(metric || 0).toFixed(2)}%)` : (s.target_hit ? 'TARGET HIT' : 'EXPIRED');
+                const outcomeColor = s.target_hit ? 'var(--success)' : (s.stoploss_hit ? 'var(--danger)' : 'var(--text-muted)');
+                
+                logChunks.push(`
+                    <div style="background-color: #0d1117; padding: 1rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <div style="font-weight: 600; margin-bottom: 0.75rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                            [TRADE LOG] ${s.company}
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                            <div><strong style="color:var(--text-main);">Entry:</strong> ${s.entry_time} @ ${parseFloat(s.entry).toFixed(2)}</div>
+                            <div><strong style="color:var(--text-main);">Exit:</strong> ${s.exit_time ? s.exit_time.split(" ")[0] : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">Target:</strong> ${parseFloat(s.Target).toFixed(2)}</div>
+                            <div><strong style="color:var(--text-main);">Stoploss:</strong> ${parseFloat(s.Stoploss).toFixed(2)}</div>
+                            <div><strong style="color:var(--text-main);">Trend (LTF):</strong> ${s.supertrend_trend || 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">Trend (HTF):</strong> ${s.in_uptrend_htf === true ? 'UPTREND' : (s.in_uptrend_htf === false ? 'DOWNTREND' : 'N/A')}</div>
+                            <div><strong style="color:var(--text-main);">RSI (LTF):</strong> ${s.rsi != null ? parseFloat(s.rsi).toFixed(2) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">RSI (HTF):</strong> ${s.rsi_HTF != null ? parseFloat(s.rsi_HTF).toFixed(2) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">CMF:</strong> ${s.cmf != null ? parseFloat(s.cmf).toFixed(3) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">Rel Vol:</strong> ${s.rel_vol != null ? parseFloat(s.rel_vol).toFixed(2) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">ATR:</strong> ${s.atr != null ? parseFloat(s.atr).toFixed(2) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">ADX:</strong> ${s.adx != null ? parseFloat(s.adx).toFixed(2) : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">EMA20:</strong> ${s.ema_20 != null ? parseFloat(s.ema_20).toFixed(2) : 'N/A'} (${s.price_vs_ema20 || 'N/A'})</div>
+                            <div><strong style="color:var(--text-main);">Days Held:</strong> ${s.days_held != null ? s.days_held : 'N/A'}</div>
+                            <div><strong style="color:var(--text-main);">Outcome:</strong> <span style="color: ${outcomeColor}; font-weight: 600;">${outcomeStr}</span></div>
+                            <div style="grid-column: span 2; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: #ffca28;">
+                                <strong>Max High Reached:</strong> ${parseFloat(s.max_high_reached).toFixed(2)} (${(s.max_high_pct || 0).toFixed(2)}% from entry)
+                                <span style="margin-left: 1rem; color: #58a6ff;"><strong>Max High (LF):</strong> ${s.max_high_lookahead_pct != null ? s.max_high_lookahead_pct.toFixed(2) + '%' : 'N/A'}</span>
+                                <span style="margin-left: 1rem; color: #ab71f8;"><strong>Close (LF):</strong> ${s.close_lookahead_pct != null ? s.close_lookahead_pct.toFixed(2) + '%' : 'N/A'}</span>
+                            </div>
+                            <div style="grid-column: span 2; margin-top: 4px; font-size: 0.8rem; color: var(--text-muted);">
+                                <strong>Signal Candle:</strong> O:${parseFloat(s.signal_open).toFixed(2)} H:${parseFloat(s.signal_high).toFixed(2)} L:${parseFloat(s.signal_low).toFixed(2)} C:${parseFloat(s.signal_close).toFixed(2)} ${s.signal_volume ? '| Vol:' + s.signal_volume.toLocaleString() : ''}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            logContainer.innerHTML = logChunks.join('');
+            logContainer.setAttribute('data-rendered', 'true');
+        }
+
+        function applyFilters() {
+            const btnText = document.getElementById('applyFilterText');
+            const loader = document.getElementById('filterLoader');
+            btnText.innerText = 'Applying...';
+            loader.style.display = 'inline-block';
+
+            // Allow UI to update before heavy processing
+            setTimeout(() => {
+                renderResults();
+                btnText.innerText = 'Apply Filters';
+                loader.style.display = 'none';
+            }, 50);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterLtfMin').value = '';
+            document.getElementById('filterLtfMax').value = '';
+            document.getElementById('filterHtfMin').value = '';
+            document.getElementById('filterHtfMax').value = '';
+            document.getElementById('filterCmf').value = '';
+            document.getElementById('filterRelVol').value = '';
+            document.getElementById('filterAtr').value = '';
+            document.getElementById('filterAdx').value = '';
+            document.getElementById('filterRangeMin').value = '';
+            document.getElementById('filterRangeMax').value = '';
+            document.getElementById('filterBodyMin').value = '';
+            document.getElementById('filterBodyMax').value = '';
+            document.getElementById('filterMaxHigh').value = '';
+            document.getElementById('filterMaxHighLf').value = '';
+            document.getElementById('filterCloseLf').value = '';
+            document.getElementById('filterEma').value = 'ALL';
+            document.getElementById('filterHtfTrend').value = 'ALL';
+            applyFilters();
+        }
+
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            const btn = document.getElementById(id + 'Btn');
+            if (el.style.display === 'none' || el.style.display === '') {
+                if (id === 'tradeLogs') {
+                    renderTradeLogs();
+                    el.style.display = 'flex';
+                } else {
+                    el.style.display = 'block';
+                }
+                btn.innerText = 'Hide Details';
+            } else {
+                el.style.display = 'none';
+                btn.innerText = 'Show Details';
+            }
+        }
+
+        function saveResults() {
+            if (!allSignals || allSignals.length === 0) {
+                alert("No results to save.");
+                return;
+            }
+            const dataToSave = {
+                signals: allSignals,
+                timeTaken: currentTimeTaken
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToSave));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "backtest_results.json");
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function loadResults(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const contents = e.target.result;
+                    const parsedData = JSON.parse(contents);
+                    
+                    if (parsedData.signals) {
+                        allSignals = parsedData.signals;
+                        currentTimeTaken = parsedData.timeTaken || 0;
+                        document.getElementById('resultsPanel').style.display = 'block';
+                        renderResults();
+                    } else {
+                        alert("Invalid results file format: Missing 'signals' array.");
+                    }
+                } catch(err) {
+                    alert("Error parsing the JSON file.");
+                    console.error("Load JSON Error:", err);
+                }
+                
+                // Reset file input so same file can be loaded again if needed
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+        function toggleTargetMode() {
+            const isDynamic = document.getElementById('targetModeDynamic').checked;
+            document.getElementById('fixedTargetInput').style.display = isDynamic ? 'none' : 'block';
+            document.getElementById('dynamicTargetInput').style.display = isDynamic ? 'block' : 'none';
+        }
+
+    </script>
+
+    <script>
+    const MODULE_META = {
+        'scanner':     {title:'Signal Scanner',      subtitle:'Live market scanning · RSI + Supertrend'},
+        'backtester':  {title:'Strategy Backtester', subtitle:'Historical signal backtesting'},
+        'datacollect': {title:'Data Collection',     subtitle:'DhanHQ historical & live data pipeline'},
+        'portfolio':   {title:'Live Portfolio',      subtitle:'Coming soon'},
+    };
+    function switchModule(name) {
+        try {
+            document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active'));
+            const pane = document.getElementById('module-' + name);
+            if (pane) pane.classList.add('active');
+            document.querySelectorAll('#sidebarNav li').forEach(li =>
+                li.classList.toggle('active', li.dataset.module === name));
+            const m = MODULE_META[name] || {};
+            const t = document.getElementById('topBarTitle');
+            const s = document.getElementById('topBarSubtitle');
+            if (t) t.textContent = m.title || name;
+            if (s) s.textContent = m.subtitle || '';
+        } catch (err) {
+            alert("Error in switchModule: " + err.message);
+        }
+    }
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    }
+    function reloadDcFrame() { const f = document.getElementById('dcFrame'); f.src = f.src; }
+    function switchMainTab(tab) {
+        if (tab === 'backtest') switchModule('backtester');
+        else switchModule('scanner');
+    }
+    function updateClock() {
+        const el = document.getElementById('topBarClock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+    setInterval(updateClock, 1000); updateClock();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,965 @@
+{
+  "job_id": "8308e49c-3e4f-4e33-90d5-e8aafe3c0901",
+  "status": "completed",
+  "created_at": "2026-04-23T15:47:30.558399",
+  "updated_at": "2026-04-23T15:48:20.148231",
+  "symbols": [
+    "ADANIENT",
+    "ADANIPORTS",
+    "APOLLOHOSP",
+    "ASIANPAINT",
+    "AXISBANK",
+    "BAJAJ-AUTO",
+    "BAJFINANCE",
+    "BAJAJFINSV",
+    "BEL",
+    "BHARTIARTL",
+    "CIPLA",
+    "COALINDIA",
+    "DRREDDY",
+    "EICHERMOT",
+    "ETERNAL",
+    "GRASIM",
+    "HCLTECH",
+    "HDFCBANK",
+    "HDFCLIFE",
+    "HINDALCO",
+    "HINDUNILVR",
+    "ICICIBANK",
+    "ITC",
+    "INFY",
+    "INDIGO",
+    "JSWSTEEL",
+    "JIOFIN",
+    "KOTAKBANK",
+    "LT",
+    "M&M",
+    "MARUTI",
+    "MAXHEALTH",
+    "NTPC",
+    "NESTLEIND",
+    "ONGC",
+    "POWERGRID",
+    "RELIANCE",
+    "SBILIFE",
+    "SHRIRAMFIN",
+    "SBIN",
+    "SUNPHARMA",
+    "TCS",
+    "TATACONSUM",
+    "TMPV",
+    "TATASTEEL",
+    "TECHM",
+    "TITAN",
+    "TRENT",
+    "ULTRACEMCO",
+    "WIPRO"
+  ],
+  "from_date": "2025-10-04",
+  "to_date": "2026-04-24",
+  "exchange_segment": "NSE_EQ",
+  "instrument": "EQUITY",
+  "total_requests": 119,
+  "symbols_state": {
+    "ADANIENT": {
+      "symbol": "ADANIENT",
+      "status": "completed",
+      "security_id": "25",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ADANIENT_Day.csv",
+        "ADANIENT_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:30.564400",
+      "completed_at": "2026-04-23T15:47:31.542611"
+    },
+    "ADANIPORTS": {
+      "symbol": "ADANIPORTS",
+      "status": "completed",
+      "security_id": "15083",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ADANIPORTS_Day.csv",
+        "ADANIPORTS_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:31.553481",
+      "completed_at": "2026-04-23T15:47:31.700932"
+    },
+    "APOLLOHOSP": {
+      "symbol": "APOLLOHOSP",
+      "status": "completed",
+      "security_id": "157",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "APOLLOHOSP_Day.csv",
+        "APOLLOHOSP_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:31.703847",
+      "completed_at": "2026-04-23T15:47:34.106141"
+    },
+    "ASIANPAINT": {
+      "symbol": "ASIANPAINT",
+      "status": "completed",
+      "security_id": "236",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ASIANPAINT_Day.csv",
+        "ASIANPAINT_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:34.108054",
+      "completed_at": "2026-04-23T15:47:34.247322"
+    },
+    "AXISBANK": {
+      "symbol": "AXISBANK",
+      "status": "completed",
+      "security_id": "5900",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "AXISBANK_Day.csv",
+        "AXISBANK_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:34.248923",
+      "completed_at": "2026-04-23T15:47:34.427098"
+    },
+    "BAJAJ-AUTO": {
+      "symbol": "BAJAJ-AUTO",
+      "status": "completed",
+      "security_id": "16669",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "BAJAJ-AUTO_Day.csv",
+        "BAJAJ-AUTO_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:34.429730",
+      "completed_at": "2026-04-23T15:47:36.789373"
+    },
+    "BAJFINANCE": {
+      "symbol": "BAJFINANCE",
+      "status": "completed",
+      "security_id": "317",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "BAJFINANCE_Day.csv",
+        "BAJFINANCE_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:36.790939",
+      "completed_at": "2026-04-23T15:47:36.969891"
+    },
+    "BAJAJFINSV": {
+      "symbol": "BAJAJFINSV",
+      "status": "completed",
+      "security_id": "16675",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "BAJAJFINSV_Day.csv",
+        "BAJAJFINSV_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:36.972175",
+      "completed_at": "2026-04-23T15:47:39.193818"
+    },
+    "BEL": {
+      "symbol": "BEL",
+      "status": "completed",
+      "security_id": "383",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "BEL_Day.csv",
+        "BEL_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:39.195877",
+      "completed_at": "2026-04-23T15:47:39.375495"
+    },
+    "BHARTIARTL": {
+      "symbol": "BHARTIARTL",
+      "status": "completed",
+      "security_id": "10604",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "BHARTIARTL_Day.csv",
+        "BHARTIARTL_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:39.377282",
+      "completed_at": "2026-04-23T15:47:39.563807"
+    },
+    "CIPLA": {
+      "symbol": "CIPLA",
+      "status": "completed",
+      "security_id": "694",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "CIPLA_Day.csv",
+        "CIPLA_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:39.566984",
+      "completed_at": "2026-04-23T15:47:41.886064"
+    },
+    "COALINDIA": {
+      "symbol": "COALINDIA",
+      "status": "completed",
+      "security_id": "20374",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "COALINDIA_Day.csv",
+        "COALINDIA_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:41.888080",
+      "completed_at": "2026-04-23T15:47:42.061548"
+    },
+    "DRREDDY": {
+      "symbol": "DRREDDY",
+      "status": "completed",
+      "security_id": "881",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "DRREDDY_Day.csv",
+        "DRREDDY_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:42.063358",
+      "completed_at": "2026-04-23T15:47:44.312237"
+    },
+    "EICHERMOT": {
+      "symbol": "EICHERMOT",
+      "status": "completed",
+      "security_id": "910",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "EICHERMOT_Day.csv",
+        "EICHERMOT_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:44.314022",
+      "completed_at": "2026-04-23T15:47:44.469439"
+    },
+    "ETERNAL": {
+      "symbol": "ETERNAL",
+      "status": "completed",
+      "security_id": "5097",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ETERNAL_Day.csv",
+        "ETERNAL_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:44.471766",
+      "completed_at": "2026-04-23T15:47:44.633324"
+    },
+    "GRASIM": {
+      "symbol": "GRASIM",
+      "status": "completed",
+      "security_id": "1232",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "GRASIM_Day.csv",
+        "GRASIM_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:44.635148",
+      "completed_at": "2026-04-23T15:47:46.987813"
+    },
+    "HCLTECH": {
+      "symbol": "HCLTECH",
+      "status": "completed",
+      "security_id": "7229",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "HCLTECH_Day.csv",
+        "HCLTECH_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:46.989807",
+      "completed_at": "2026-04-23T15:47:47.142466"
+    },
+    "HDFCBANK": {
+      "symbol": "HDFCBANK",
+      "status": "completed",
+      "security_id": "1333",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "HDFCBANK_Day.csv",
+        "HDFCBANK_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:47.144137",
+      "completed_at": "2026-04-23T15:47:49.423627"
+    },
+    "HDFCLIFE": {
+      "symbol": "HDFCLIFE",
+      "status": "completed",
+      "security_id": "467",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "HDFCLIFE_Day.csv",
+        "HDFCLIFE_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:49.425488",
+      "completed_at": "2026-04-23T15:47:49.609870"
+    },
+    "HINDALCO": {
+      "symbol": "HINDALCO",
+      "status": "completed",
+      "security_id": "1363",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "HINDALCO_Day.csv",
+        "HINDALCO_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:49.612524",
+      "completed_at": "2026-04-23T15:47:49.796564"
+    },
+    "HINDUNILVR": {
+      "symbol": "HINDUNILVR",
+      "status": "completed",
+      "security_id": "1394",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "HINDUNILVR_Day.csv",
+        "HINDUNILVR_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:49.798818",
+      "completed_at": "2026-04-23T15:47:51.972252"
+    },
+    "ICICIBANK": {
+      "symbol": "ICICIBANK",
+      "status": "completed",
+      "security_id": "4963",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ICICIBANK_Day.csv",
+        "ICICIBANK_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:51.975747",
+      "completed_at": "2026-04-23T15:47:52.178001"
+    },
+    "ITC": {
+      "symbol": "ITC",
+      "status": "completed",
+      "security_id": "1660",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ITC_Day.csv",
+        "ITC_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:52.180877",
+      "completed_at": "2026-04-23T15:47:54.604624"
+    },
+    "INFY": {
+      "symbol": "INFY",
+      "status": "completed",
+      "security_id": "1594",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "INFY_Day.csv",
+        "INFY_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:54.606397",
+      "completed_at": "2026-04-23T15:47:54.752818"
+    },
+    "INDIGO": {
+      "symbol": "INDIGO",
+      "status": "completed",
+      "security_id": "11195",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "INDIGO_Day.csv",
+        "INDIGO_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:54.754729",
+      "completed_at": "2026-04-23T15:47:54.897386"
+    },
+    "JSWSTEEL": {
+      "symbol": "JSWSTEEL",
+      "status": "completed",
+      "security_id": "11723",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "JSWSTEEL_Day.csv",
+        "JSWSTEEL_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:54.899113",
+      "completed_at": "2026-04-23T15:47:57.337696"
+    },
+    "JIOFIN": {
+      "symbol": "JIOFIN",
+      "status": "completed",
+      "security_id": "18143",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "JIOFIN_Day.csv",
+        "JIOFIN_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:57.339542",
+      "completed_at": "2026-04-23T15:47:57.520097"
+    },
+    "KOTAKBANK": {
+      "symbol": "KOTAKBANK",
+      "status": "completed",
+      "security_id": "1922",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "KOTAKBANK_Day.csv",
+        "KOTAKBANK_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:57.521836",
+      "completed_at": "2026-04-23T15:47:59.560482"
+    },
+    "LT": {
+      "symbol": "LT",
+      "status": "completed",
+      "security_id": "11483",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "LT_Day.csv",
+        "LT_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:59.563404",
+      "completed_at": "2026-04-23T15:47:59.742041"
+    },
+    "M&M": {
+      "symbol": "M&M",
+      "status": "completed",
+      "security_id": "2031",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "M&M_Day.csv",
+        "M&M_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:59.743891",
+      "completed_at": "2026-04-23T15:47:59.884929"
+    },
+    "MARUTI": {
+      "symbol": "MARUTI",
+      "status": "completed",
+      "security_id": "10999",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "MARUTI_Day.csv",
+        "MARUTI_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:47:59.886790",
+      "completed_at": "2026-04-23T15:48:02.204346"
+    },
+    "MAXHEALTH": {
+      "symbol": "MAXHEALTH",
+      "status": "completed",
+      "security_id": "22377",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "MAXHEALTH_Day.csv",
+        "MAXHEALTH_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:02.207893",
+      "completed_at": "2026-04-23T15:48:02.369334"
+    },
+    "NTPC": {
+      "symbol": "NTPC",
+      "status": "completed",
+      "security_id": "11630",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "NTPC_Day.csv",
+        "NTPC_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:02.371517",
+      "completed_at": "2026-04-23T15:48:04.688440"
+    },
+    "NESTLEIND": {
+      "symbol": "NESTLEIND",
+      "status": "completed",
+      "security_id": "17963",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "NESTLEIND_Day.csv",
+        "NESTLEIND_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:04.690278",
+      "completed_at": "2026-04-23T15:48:04.905839"
+    },
+    "ONGC": {
+      "symbol": "ONGC",
+      "status": "completed",
+      "security_id": "2475",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ONGC_Day.csv",
+        "ONGC_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:04.908429",
+      "completed_at": "2026-04-23T15:48:05.057256"
+    },
+    "POWERGRID": {
+      "symbol": "POWERGRID",
+      "status": "completed",
+      "security_id": "14977",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "POWERGRID_Day.csv",
+        "POWERGRID_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:05.059268",
+      "completed_at": "2026-04-23T15:48:07.101796"
+    },
+    "RELIANCE": {
+      "symbol": "RELIANCE",
+      "status": "completed",
+      "security_id": "2885",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "RELIANCE_Day.csv",
+        "RELIANCE_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:07.103534",
+      "completed_at": "2026-04-23T15:48:07.265427"
+    },
+    "SBILIFE": {
+      "symbol": "SBILIFE",
+      "status": "completed",
+      "security_id": "21808",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "SBILIFE_Day.csv",
+        "SBILIFE_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:07.268527",
+      "completed_at": "2026-04-23T15:48:09.614722"
+    },
+    "SHRIRAMFIN": {
+      "symbol": "SHRIRAMFIN",
+      "status": "completed",
+      "security_id": "4306",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "SHRIRAMFIN_Day.csv",
+        "SHRIRAMFIN_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:09.616797",
+      "completed_at": "2026-04-23T15:48:09.799760"
+    },
+    "SBIN": {
+      "symbol": "SBIN",
+      "status": "completed",
+      "security_id": "3045",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "SBIN_Day.csv",
+        "SBIN_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:09.802160",
+      "completed_at": "2026-04-23T15:48:10.546624"
+    },
+    "SUNPHARMA": {
+      "symbol": "SUNPHARMA",
+      "status": "completed",
+      "security_id": "3351",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "SUNPHARMA_Day.csv",
+        "SUNPHARMA_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:10.548567",
+      "completed_at": "2026-04-23T15:48:12.594348"
+    },
+    "TCS": {
+      "symbol": "TCS",
+      "status": "completed",
+      "security_id": "11536",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TCS_Day.csv",
+        "TCS_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:12.596786",
+      "completed_at": "2026-04-23T15:48:12.750762"
+    },
+    "TATACONSUM": {
+      "symbol": "TATACONSUM",
+      "status": "completed",
+      "security_id": "3432",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TATACONSUM_Day.csv",
+        "TATACONSUM_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:12.752612",
+      "completed_at": "2026-04-23T15:48:12.886633"
+    },
+    "TMPV": {
+      "symbol": "TMPV",
+      "status": "completed",
+      "security_id": "3456",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TMPV_Day.csv",
+        "TMPV_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:12.888467",
+      "completed_at": "2026-04-23T15:48:15.126907"
+    },
+    "TATASTEEL": {
+      "symbol": "TATASTEEL",
+      "status": "completed",
+      "security_id": "3499",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TATASTEEL_Day.csv",
+        "TATASTEEL_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:15.128686",
+      "completed_at": "2026-04-23T15:48:15.267301"
+    },
+    "TECHM": {
+      "symbol": "TECHM",
+      "status": "completed",
+      "security_id": "13538",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TECHM_Day.csv",
+        "TECHM_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:15.269161",
+      "completed_at": "2026-04-23T15:48:17.457373"
+    },
+    "TITAN": {
+      "symbol": "TITAN",
+      "status": "completed",
+      "security_id": "3506",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TITAN_Day.csv",
+        "TITAN_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:17.460468",
+      "completed_at": "2026-04-23T15:48:17.652229"
+    },
+    "TRENT": {
+      "symbol": "TRENT",
+      "status": "completed",
+      "security_id": "1964",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "TRENT_Day.csv",
+        "TRENT_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:17.654447",
+      "completed_at": "2026-04-23T15:48:17.795013"
+    },
+    "ULTRACEMCO": {
+      "symbol": "ULTRACEMCO",
+      "status": "completed",
+      "security_id": "11532",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "ULTRACEMCO_Day.csv",
+        "ULTRACEMCO_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:17.797460",
+      "completed_at": "2026-04-23T15:48:19.961516"
+    },
+    "WIPRO": {
+      "symbol": "WIPRO",
+      "status": "completed",
+      "security_id": "3787",
+      "total_chunks": 0,
+      "completed_chunks": 0,
+      "total_rows_5min": 0,
+      "total_rows_day": 135,
+      "total_rows_week": 28,
+      "files": [
+        "WIPRO_Day.csv",
+        "WIPRO_Week.csv"
+      ],
+      "error": null,
+      "retry_info": null,
+      "started_at": "2026-04-23T15:48:19.963325",
+      "completed_at": "2026-04-23T15:48:20.148223"
+    }
+  }
+}

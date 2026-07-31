@@ -1,0 +1,9 @@
+node_modules/
+data/
+cache/
+*.log
+check_*.py
+output/
+venv/
+data/5min_historical/
+*.txt

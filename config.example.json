@@ -1,0 +1,30 @@
+{
+  "data_dir": "./data",
+  "output_dir": "./output",
+  "companies": ["RELIANCE", "TCS", "HDFCBANK"],
+  "start_date": "2021-01-01",
+  "end_date": "2025-12-31",
+  "signal_settings": {
+    "signal_timeframe_file_suffix": "Day",
+    "execution_timeframe_file_suffix": "5min",
+    "htf_timeframe_file_suffix": "Week",
+    "rsi_period": 14,
+    "htf_rsi_period": 14,
+    "supertrend_period": 21,
+    "supertrend_multiplier": 1.5,
+    "entry_lookahead_bars": 2,
+    "max_stoploss_pct": 0.05,
+    "target_levels": [17],
+    "look_forward_limit": 1575
+  },
+  "portfolio_settings": {
+    "initial_capital": 100000.0,
+    "fee_rate": 0.0015,
+    "mtf_enabled": true,
+    "mtf_leverage": 4.0,
+    "mtf_daily_rate": 0.0004,
+    "cap_fraction": 0.25,
+    "rsi_filter": [50, 90],
+    "htf_rsi_filter": [50, 90]
+  }
+}
