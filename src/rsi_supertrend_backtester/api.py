@@ -480,9 +480,9 @@ def _load_entry_preview_frames(
 
 @app.post("/api/backtest")
 async def run_backtest_endpoint(req: BacktestRequest):
-    logger.info(f"=== RECEIVED BACKTEST REQUEST ===\nPayload: {req.dict()}\n===============================")
+    logger.info(f"=== RECEIVED BACKTEST REQUEST ===\nPayload: {req.model_dump()}\n===============================")
     with open(BASE_DIR / "last_request.json", "w") as f:
-        f.write(req.json())
+        f.write(req.model_dump_json())
     config_path = BASE_DIR / "config.json"
     config = load_config(str(config_path))
     
