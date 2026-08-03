@@ -686,6 +686,7 @@
                                 <th>Entry Time</th>
                                 <th>Type / Exit</th>
                                 <th>Target</th>
+                                <th>Max High</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -1866,6 +1867,7 @@
                         <td>${(s.entry_time || 'N/A').split(' ')[0]}<br><small>@ ${s.entry != null ? parseFloat(s.entry).toFixed(2) : 'N/A'}</small></td>
                         <td>${s.exit_time ? s.exit_time.split(' ')[0] : 'N/A'}</td>
                         <td>${s.effective_target_pct != null ? parseFloat(s.effective_target_pct).toFixed(2) + '%' : (s.Target != null ? parseFloat(s.Target).toFixed(2) : 'N/A')}</td>
+                        <td>${s.max_high_pct != null ? parseFloat(s.max_high_pct).toFixed(2) + '%' : 'N/A'}</td>
                         <td>${statusHtml}</td>
                     </tr>
                 `);
