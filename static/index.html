@@ -292,6 +292,43 @@
         .toast.t-info{border-color:rgba(61,142,248,.35);background:rgba(61,142,248,.08);}
         @keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
     </style>
+    <script>
+    const MODULE_META = {
+        'scanner':     {title:'Signal Scanner',      subtitle:'Live market scanning • RSI + Supertrend'},
+        'backtester':  {title:'Strategy Backtester', subtitle:'Historical signal backtesting'},
+        'updated-backtester': {title:'Updated Backtester', subtitle:'Isolated copy of Backtester for future changes'},
+        'datacollect': {title:'Data Collection',     subtitle:'DhanHQ historical & live data pipeline'},
+        'livedata':    {title:'Live Data Collection',subtitle:'Real-time WebSocket data fetching'},
+        'portfolio':   {title:'Live Portfolio',      subtitle:'Real-time trade tracking — automated entry, target & SL'},
+    };
+    function switchModule(name) {
+        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active'));
+        const pane = document.getElementById('module-' + name);
+        if (pane) pane.classList.add('active');
+        document.querySelectorAll('#sidebarNav li').forEach(li =>
+            li.classList.toggle('active', li.dataset.module === name));
+        const m = MODULE_META[name] || {};
+        const titleEl = document.getElementById('topBarTitle');
+        const subTitleEl = document.getElementById('topBarSubtitle');
+        if (titleEl) titleEl.textContent = m.title || name;
+        if (subTitleEl) subTitleEl.textContent = m.subtitle || '';
+        if (name === 'portfolio' && typeof loadLivePortfolio === 'function') loadLivePortfolio();
+    }
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    }
+    function reloadDcFrame() { const f = document.getElementById('dcFrame'); if(f) f.src = f.src; }
+    function switchMainTab(tab) {
+        if (tab === 'backtest') switchModule('backtester');
+        else switchModule('scanner');
+    }
+    function updateClock() {
+        const el = document.getElementById('topBarClock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+    setInterval(updateClock, 1000);
+    window.addEventListener('DOMContentLoaded', updateClock);
+    </script>
 </head>
 <body>
 <div id="appShell">
@@ -1241,7 +1278,7 @@
         <div id="module-updated-backtester" class="module-pane" style="padding:0;">
             <iframe
                 id="updatedBacktesterFrame"
-                src="updated_backtester.html?v=embedded-shell-fix"
+                src="updated_backtester.html?v=embedded-shell-fix-v2"
                 style="width:100%; min-height:calc(100vh - 48px); border:none; display:block;"
                 title="Updated Backtester">
             </iframe>
@@ -7275,7 +7312,9 @@
         let liveStatusInterval = null;
         let liveScanResults = []; // All raw scan results from backend
         const API_BASE = (() => {
-            return 'http://127.0.0.1:8000';
+            if (window.location.protocol === 'file:') return 'http://127.0.0.1:8000';
+            if ((window.location.port || '') === '3000') return `http://${window.location.hostname || '127.0.0.1'}:8000`;
+            return window.location.origin;
         })();
 
         function apiUrl(path) {
@@ -8868,6 +8907,8 @@
             status.innerText = 'Initializing...';
             document.getElementById('resultsPanel').style.display = 'none';
 
+            let receivedComplete = false;
+
             try {
                 const response = await fetch(apiUrl('/api/backtest'), {
                     method: 'POST',
@@ -8889,7 +8930,6 @@
                 let totalCompanies = 0;
                 let timeTaken = 0;
                 let backtestErrors = [];
-                let receivedComplete = false;
 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -8945,6 +8985,7 @@
                                         const suffix = backtestErrors.length > 5 ? `\n...and ${backtestErrors.length - 5} more` : '';
                                         alert(`Backtest completed with ${backtestErrors.length} company error(s):\n${shown}${suffix}`);
                                     }
+                                    break;
                                 }
                             } catch (e) {
                                 console.error('Error parsing SSE data:', e);
@@ -10559,40 +10600,7 @@
     applyTradeManagementSettingsToForm(lastBacktestPayload);
 </script>
 
-    <script>
-    const MODULE_META = {
-        'scanner':     {title:'Signal Scanner',      subtitle:'Live market scanning • RSI + Supertrend'},
-        'backtester':  {title:'Strategy Backtester', subtitle:'Historical signal backtesting'},
-        'updated-backtester': {title:'Updated Backtester', subtitle:'Isolated copy of Backtester for future changes'},
-        'datacollect': {title:'Data Collection',     subtitle:'DhanHQ historical & live data pipeline'},
-        'livedata':    {title:'Live Data Collection',subtitle:'Real-time WebSocket data fetching'},
-        'portfolio':   {title:'Live Portfolio',      subtitle:'Real-time trade tracking — automated entry, target & SL'},
-    };
-    function switchModule(name) {
-        document.querySelectorAll('.module-pane').forEach(p => p.classList.remove('active'));
-        const pane = document.getElementById('module-' + name);
-        if (pane) pane.classList.add('active');
-        document.querySelectorAll('#sidebarNav li').forEach(li =>
-            li.classList.toggle('active', li.dataset.module === name));
-        const m = MODULE_META[name] || {};
-        document.getElementById('topBarTitle').textContent    = m.title    || name;
-        document.getElementById('topBarSubtitle').textContent = m.subtitle || '';
-        if (name === 'portfolio') loadLivePortfolio();
-    }
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-    }
-    function reloadDcFrame() { const f = document.getElementById('dcFrame'); f.src = f.src; }
-    function switchMainTab(tab) {
-        if (tab === 'backtest') switchModule('backtester');
-        else switchModule('scanner');
-    }
-    function updateClock() {
-        const el = document.getElementById('topBarClock');
-        if (el) el.textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    }
-    setInterval(updateClock, 1000); updateClock();
-    </script>
+
 
 </body>
 </html>

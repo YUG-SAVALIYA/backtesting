@@ -7344,7 +7344,9 @@
         let liveStatusInterval = null;
         let liveScanResults = []; // All raw scan results from backend
         const API_BASE = (() => {
-            return 'http://127.0.0.1:8000';
+            if (window.location.protocol === 'file:') return 'http://127.0.0.1:8000';
+            if ((window.location.port || '') === '3000') return `http://${window.location.hostname || '127.0.0.1'}:8000`;
+            return window.location.origin;
         })();
 
         function apiUrl(path) {
@@ -9398,6 +9400,8 @@
             status.innerText = 'Initializing...';
             document.getElementById('resultsPanel').style.display = 'none';
 
+            let receivedComplete = false;
+
             try {
                 const response = await fetch(apiUrl('/api/backtest'), {
                     method: 'POST',
@@ -9419,7 +9423,6 @@
                 let totalCompanies = 0;
                 let timeTaken = 0;
                 let backtestErrors = [];
-                let receivedComplete = false;
 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -9478,6 +9481,7 @@
                                         const suffix = backtestErrors.length > 5 ? `\n...and ${backtestErrors.length - 5} more` : '';
                                         alert(`Backtest completed with ${backtestErrors.length} company error(s):\n${shown}${suffix}`);
                                     }
+                                    break;
                                 }
                             } catch (e) {
                                 console.error('Error parsing SSE data:', e);
