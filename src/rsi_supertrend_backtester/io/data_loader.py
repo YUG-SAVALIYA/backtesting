@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from ..db import engine
+
 
 REQUIRED_COLS = {"datetime", "open", "high", "low", "close"}
 
@@ -27,15 +27,7 @@ class MarketDataLoader:
         s = suffix.lower().strip()
         mapped_suffix = norm.get(s, s)
         
-        if mapped_suffix == "5min":
-            hist_dir = Path(r"C:\Users\Yug\Desktop\rsi\data\5min_historical")
-            if (hist_dir / f"{symbol}_5m.csv").exists():
-                return hist_dir / f"{symbol}_5m.csv"
-            if (hist_dir / f"{symbol}_5min.csv").exists():
-                return hist_dir / f"{symbol}_5min.csv"
-        
-        path1 = self.data_dir / f"{symbol}_{mapped_suffix}.csv"
-        return path1
+        return self.data_dir / f"{symbol}_{mapped_suffix}.csv"
 
     def _read_csv(self, path: Path, cache: bool = True) -> pd.DataFrame:
         path_key = str(path.resolve())
@@ -51,61 +43,30 @@ class MarketDataLoader:
 
         df = None
         
-        if mapped_suffix in ['daily', 'weekly', 'monthly']:
-            # Fetch daily data from postgres!
-            query = "SELECT datetime, open, high, low, close, volume FROM market_candles_cleaned WHERE symbol = %(symbol)s ORDER BY datetime ASC"
-            df = pd.read_sql(query, engine, params={"symbol": symbol})
+        if not path.exists():
+            raise FileNotFoundError(f"Missing local CSV file for {symbol}: {path}")
             
-            if df.empty:
-                raise ValueError(f"No daily data found in DB for {symbol}")
-                
-            # Convert datetime to pandas datetime
-            raw_dt = df["datetime"].astype(str).str[:19]
-            parsed = pd.to_datetime(raw_dt, format="%Y-%m-%d", errors="coerce")
-            bad_mask = parsed.isna()
-            if bad_mask.any():
-                parsed[bad_mask] = pd.to_datetime(raw_dt[bad_mask], errors="coerce")
-            df["datetime"] = parsed
-            df = df.dropna(subset=["datetime"])
-            df = df.sort_values("datetime").reset_index(drop=True)
+        df = pd.read_csv(path)
+        
+        # If no header (5m fix)
+        if 'date' not in df.columns and 'datetime' not in df.columns:
+            df = pd.read_csv(path, header=None, names=['datetime','open','high','low','close','volume'])
+        
+        if 'date' in df.columns:
+            df.rename(columns={'date': 'datetime'}, inplace=True)
             
-            if mapped_suffix == 'weekly':
-                daily_df = df.set_index("datetime")
-                df = daily_df.resample("W-FRI").agg({
-                    "open": "first",
-                    "high": "max",
-                    "low": "min",
-                    "close": "last",
-                    "volume": "sum"
-                }).dropna().reset_index()
-                df["symbol"] = symbol
-
-        else:
-            # Fallback for 5min and others (loading from file)
-            if not path.exists():
-                raise FileNotFoundError(f"Missing local CSV file for {symbol}: {path}")
-                
-            df = pd.read_csv(path)
-            
-            # If no header (5m fix)
-            if 'date' not in df.columns and 'datetime' not in df.columns:
-                df = pd.read_csv(path, header=None, names=['datetime','open','high','low','close','volume'])
-            
-            if 'date' in df.columns:
-                df.rename(columns={'date': 'datetime'}, inplace=True)
-                
-            missing = REQUIRED_COLS - set(df.columns)
-            if missing:
-                raise DataValidationError(f"Missing columns in {path.name}: {sorted(missing)}")
-            
-            raw_dt = df["datetime"].astype(str).str[:19]
-            parsed = pd.to_datetime(raw_dt, format="%Y-%m-%d %H:%M:%S", errors="coerce")
-            bad_mask = parsed.isna()
-            if bad_mask.any():
-                parsed[bad_mask] = pd.to_datetime(raw_dt[bad_mask], errors="coerce")
-            df["datetime"] = parsed
-            df = df.dropna(subset=["datetime"])
-            df = df.sort_values("datetime").reset_index(drop=True)
+        missing = REQUIRED_COLS - set(df.columns)
+        if missing:
+            raise DataValidationError(f"Missing columns in {path.name}: {sorted(missing)}")
+        
+        raw_dt = df["datetime"].astype(str).str[:19]
+        parsed = pd.to_datetime(raw_dt, format="%Y-%m-%d %H:%M:%S", errors="coerce")
+        bad_mask = parsed.isna()
+        if bad_mask.any():
+            parsed[bad_mask] = pd.to_datetime(raw_dt[bad_mask], errors="coerce")
+        df["datetime"] = parsed
+        df = df.dropna(subset=["datetime"])
+        df = df.sort_values("datetime").reset_index(drop=True)
         
         if cache:
             if len(MarketDataLoader._cache) > 300:

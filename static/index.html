@@ -421,13 +421,13 @@
                         <span style="font-size:0.78rem; font-weight:700; color:var(--primary); white-space:nowrap;">LIVE FILTERS:</span>
                         <div style="display:flex; gap:0.35rem; align-items:center;">
                             <span style="font-size:0.72rem; color:var(--text-muted);">LTF RSI</span>
-                            <input type="number" id="sfLtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Min" oninput="applyScanFilters()">
-                            <input type="number" id="sfLtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Max" oninput="applyScanFilters()">
+                            <input type="number" id="sfLtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="5" placeholder="Min" oninput="applyScanFilters()">
+                            <input type="number" id="sfLtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="5" placeholder="Max" oninput="applyScanFilters()">
                         </div>
                         <div style="display:flex; gap:0.35rem; align-items:center;">
                             <span style="font-size:0.72rem; color:var(--text-muted);">HTF RSI</span>
-                            <input type="number" id="sfHtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Min" oninput="applyScanFilters()">
-                            <input type="number" id="sfHtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" placeholder="Max" oninput="applyScanFilters()">
+                            <input type="number" id="sfHtfMin" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="5" placeholder="Min" oninput="applyScanFilters()">
+                            <input type="number" id="sfHtfMax" class="form-control" style="width:55px; padding:0.2rem 0.35rem;" step="5" placeholder="Max" oninput="applyScanFilters()">
                         </div>
                         <div style="display:flex; gap:0.35rem; align-items:center;">
                             <span style="font-size:0.72rem; color:var(--text-muted);">CMF &gt;</span>
@@ -751,13 +751,13 @@
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="font-size: 0.75rem; color: var(--text-muted);">LTF RSI</span>
-                        <input type="number" id="filterLtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
-                        <input type="number" id="filterLtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                        <input type="number" id="filterLtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" step="5" placeholder="Min" oninput="applyFilters()">
+                        <input type="number" id="filterLtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" step="5" placeholder="Max" oninput="applyFilters()">
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="font-size: 0.75rem; color: var(--text-muted);">HTF RSI</span>
-                        <input type="number" id="filterHtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
-                        <input type="number" id="filterHtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                        <input type="number" id="filterHtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" step="5" placeholder="Min" oninput="applyFilters()">
+                        <input type="number" id="filterHtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" step="5" placeholder="Max" oninput="applyFilters()">
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="title" title="Chaikin Money Flow">CMF &gt;</span>

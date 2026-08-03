@@ -738,7 +738,7 @@
                     <div class="form-group">
                         <label>Pre-Final Confirmation</label>
                         <div class="grid-2" style="margin-bottom: 0;">
-                            <input type="number" id="preFinalMaxHighLf" class="form-control" value="3" step="0.1" placeholder="Max High LF > X%" title="Max High (LF) must be greater than this percentage">
+                            <input type="number" id="preFinalMaxHighLf" class="form-control" value="0" step="0.1" placeholder="Max High LF > X%" title="Max High (LF) must be greater than this percentage">
                             <input type="number" id="preFinalCloseLf" class="form-control" value="0" step="0.1" placeholder="Close LF > Y%" title="Close (LF) must be greater than this percentage">
                         </div>
                         <small style="color: #ab71f8; font-size: 0.72rem;">Final Trade only if Max High (LF) &gt; X% and Close (LF) &gt; Y%; final entry = Close (LF)</small>
@@ -804,13 +804,13 @@
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="font-size: 0.75rem; color: var(--text-muted);">LTF RSI</span>
-                        <input type="number" id="filterLtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
-                        <input type="number" id="filterLtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                        <input type="number" id="filterLtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min" oninput="applyFilters()">
+                        <input type="number" id="filterLtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max" oninput="applyFilters()">
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="font-size: 0.75rem; color: var(--text-muted);">HTF RSI</span>
-                        <input type="number" id="filterHtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min">
-                        <input type="number" id="filterHtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max">
+                        <input type="number" id="filterHtfMin" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Min" oninput="applyFilters()">
+                        <input type="number" id="filterHtfMax" class="form-control" style="width: 60px; padding: 0.25rem;" placeholder="Max" oninput="applyFilters()">
                     </div>
                     <div class="filter-group" style="display: flex; gap: 0.5rem; align-items: center;">
                         <span style="font-size: 0.75rem; color: var(--text-muted);" title="Chaikin Money Flow">CMF &gt;</span>
@@ -7617,8 +7617,8 @@
 
         function getPreFinalSettings(saved = lastBacktestPayload || {}) {
             return {
-                maxHighLfMin: saved.pre_final_max_high_lf_min ?? getReplaySettingNumber('preFinalMaxHighLf', 0),
-                closeLfMin: saved.pre_final_close_lf_min ?? getReplaySettingNumber('preFinalCloseLf', 0),
+                maxHighLfMin: getReplaySettingNumber('preFinalMaxHighLf', 0),
+                closeLfMin: getReplaySettingNumber('preFinalCloseLf', 0),
                 maxStoplossPct: saved.max_stoploss_pct ?? getReplaySettingNumber('maxStoploss', 5.0),
                 stoplossMode: saved.stoploss_mode || document.getElementById('stoplossMode')?.value || 'signal_candle_low',
                 tradeManagement: getTradeManagementSettings(saved),

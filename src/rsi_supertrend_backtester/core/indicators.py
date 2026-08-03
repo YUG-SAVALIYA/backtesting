@@ -7,7 +7,18 @@ import talib
 
 def add_rsi(df: pd.DataFrame, period: int, column_name: str) -> pd.DataFrame:
     df = df.copy()
-    df[column_name] = talib.RSI(df["close"].astype(float), timeperiod=period)
+    
+    delta = df['close'].diff()
+    gain = delta.where(delta > 0, 0.0)
+    loss = -delta.where(delta < 0, 0.0)
+    
+    avg_gain = calculate_rma(gain, period)
+    avg_loss = calculate_rma(loss, period)
+    
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    
+    df[column_name] = rsi
     return df
 
 
@@ -35,19 +46,40 @@ def tr(df: pd.DataFrame) -> pd.Series:
     return tr_series
 
 
-def rma(series: pd.Series, period: int) -> pd.Series:
-    """Relative Moving Average (Wilder's Smoothing)"""
-    rma_values = series.copy()
-    rma_values.iloc[period-1] = series.iloc[:period].mean()  # first value = SMA
-    for i in range(period, len(series)):
-        rma_values.iloc[i] = (rma_values.iloc[i-1] * (period - 1) + series.iloc[i]) / period
-    return rma_values
+def calculate_rma(series: pd.Series, period: int) -> pd.Series:
+    """
+    TradingView exact RMA (Running Moving Average) implementation.
+    Initializes using a Simple Moving Average (SMA) of the first `period` values.
+    """
+    rma = pd.Series(np.nan, index=series.index)
+    valid_idx = series.first_valid_index()
+    if valid_idx is None:
+        return rma
+        
+    start_pos = series.index.get_loc(valid_idx)
+    if len(series) - start_pos >= period:
+        # Seed with SMA
+        first_val = series.iloc[start_pos:start_pos+period].mean()
+        rma.iloc[start_pos+period-1] = first_val
+        
+        # Iterate rest
+        # RMA[i] = (RMA[i-1] * (period - 1) + value[i]) / period
+        alpha = 1 / period
+        series_np = series.to_numpy()
+        rma_np = rma.to_numpy(copy=True)
+        for i in range(start_pos+period, len(series_np)):
+            if not np.isnan(series_np[i]):
+                rma_np[i] = (series_np[i] * alpha) + (rma_np[i-1] * (1 - alpha))
+        rma = pd.Series(rma_np, index=series.index)
+        
+    # Fallback to EWM if not enough data
+    return rma.fillna(series.ewm(alpha=1/period, adjust=False).mean())
 
 
 def add_atr(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     df = df.copy()
     tr_series = tr(df)
-    df["ATR"] = rma(tr_series, period)
+    df["ATR"] = calculate_rma(tr_series, period)
     return df
 
 
@@ -111,10 +143,29 @@ def add_cmf(df: pd.DataFrame, period: int = 20) -> pd.DataFrame:
 
 def add_adx(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     df = df.copy()
-    high = pd.to_numeric(df["high"], errors="coerce")
-    low = pd.to_numeric(df["low"], errors="coerce")
-    close = pd.to_numeric(df["close"], errors="coerce")
-    df["adx"] = talib.ADX(high, low, close, timeperiod=period)
+    
+    high_diff = df['high'].diff()
+    low_diff = -df['low'].diff()
+    
+    pos_dm = np.where((high_diff > low_diff) & (high_diff > 0), high_diff, 0.0)
+    neg_dm = np.where((low_diff > high_diff) & (low_diff > 0), low_diff, 0.0)
+    
+    high_low = df['high'] - df['low']
+    high_close = np.abs(df['high'] - df['close'].shift())
+    low_close = np.abs(df['low'] - df['close'].shift())
+    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    
+    smoothed_tr = calculate_rma(tr, period)
+    smoothed_pos_dm = calculate_rma(pd.Series(pos_dm, index=df.index), period)
+    smoothed_neg_dm = calculate_rma(pd.Series(neg_dm, index=df.index), period)
+    
+    pos_di = 100 * (smoothed_pos_dm / smoothed_tr)
+    neg_di = 100 * (smoothed_neg_dm / smoothed_tr)
+    
+    dx = 100 * np.abs(pos_di - neg_di) / (pos_di + neg_di + 1e-10)
+    adx = calculate_rma(dx, period)
+    
+    df["adx"] = adx
     return df
 
 

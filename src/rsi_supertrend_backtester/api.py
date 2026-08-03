@@ -359,7 +359,7 @@ class TradeManagementTargetRequest(BaseModel):
 class BacktestRequest(BaseModel):
     companies: str
     start_date: str = "2021-01-01"
-    end_date: str = "2025-12-31"
+    end_date: str = "2026-07-28"
     ltf: str = "Day"
     htf: str = "Week"
     supertrend_period: int = 21
@@ -493,7 +493,10 @@ async def run_backtest_endpoint(req: BacktestRequest):
                 df_master = pd.read_csv(csv_path, usecols=['symbol'])
                 companies = df_master['symbol'].unique().tolist()
             else:
-                companies = config.companies
+                logger.info(f"{csv_path} not found. Scanning data directory for available companies.")
+                companies = [p.name.split('_')[0] for p in Path(config.data_dir).glob('*_daily.csv')]
+                if not companies:
+                    companies = config.companies
         except Exception as e:
             logger.error(f"Failed to load ALL companies from {csv_path}: {e}")
             companies = config.companies

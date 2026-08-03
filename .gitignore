@@ -7,3 +7,6 @@ output/
 venv/
 data/5min_historical/
 *.txt
+__pycache__/
+*.pyc
+test_*.py

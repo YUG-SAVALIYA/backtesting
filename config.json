@@ -1,6 +1,6 @@
 {
-  "data_dir": "c:/Users/Yug/Desktop/rsi/data",
-  "scanner_data_dir": "c:/Users/Yug/Desktop/rsi/data",
+  "data_dir": "d:/backtesting/backtesting/data",
+  "scanner_data_dir": "d:/backtesting/backtesting/data",
   "output_dir": "./output",
   "companies": [
     "360ONE",
