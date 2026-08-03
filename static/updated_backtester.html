@@ -9762,7 +9762,7 @@
 
                 // Candle Intensity Calculations
                 if (s.signal_open && s.signal_open > 0) {
-                    const cRange = ((s.signal_high - s.signal_low) / s.signal_open) * 100;
+                    const cRange = ((s.signal_high - s.signal_low) / s.signal_low) * 100;
                     const cBody = (Math.abs(s.signal_open - s.signal_close) / s.signal_open) * 100;
                     if (cRange < rangeMin || cRange > rangeMax) pass = false;
                     if (cBody < bodyMin || cBody > bodyMax) pass = false;
