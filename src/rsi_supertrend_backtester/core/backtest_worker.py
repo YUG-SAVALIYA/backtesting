@@ -82,15 +82,21 @@ def process_single_company_worker(payload: Dict[str, Any]) -> Dict[str, Any]:
         # ── STEP 4: Only load large 5min file if potential signals exist ──────
         try:
             execution_df = loader._read_csv(
-                loader.resolve_timeframe_path(company, execution_timeframe_file_suffix), cache=False
+                loader.resolve_timeframe_path(company, execution_timeframe_file_suffix), cache=True
             )
             execution_df = execution_df.copy()
-            execution_df["datetime"] = pd.to_datetime(execution_df["datetime"]).dt.tz_localize(None)
+            if not pd.api.types.is_datetime64_any_dtype(execution_df["datetime"]):
+                execution_df["datetime"] = pd.to_datetime(execution_df["datetime"])
+            if hasattr(execution_df["datetime"].dt, "tz") and execution_df["datetime"].dt.tz is not None:
+                execution_df["datetime"] = execution_df["datetime"].dt.tz_localize(None)
             execution_df = execution_df.set_index("datetime")
         except Exception:
             execution_df = signal_df.copy()
             if "datetime" in execution_df.columns:
-                execution_df["datetime"] = pd.to_datetime(execution_df["datetime"]).dt.tz_localize(None)
+                if not pd.api.types.is_datetime64_any_dtype(execution_df["datetime"]):
+                    execution_df["datetime"] = pd.to_datetime(execution_df["datetime"])
+                if hasattr(execution_df["datetime"].dt, "tz") and execution_df["datetime"].dt.tz is not None:
+                    execution_df["datetime"] = execution_df["datetime"].dt.tz_localize(None)
                 execution_df = execution_df.set_index("datetime")
 
         signals_by_bars = {}
