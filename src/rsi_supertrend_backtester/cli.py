@@ -10,7 +10,7 @@ from rsi_supertrend_backtester.io.data_loader import MarketDataLoader
 from rsi_supertrend_backtester.io.json_store import save_signals
 from rsi_supertrend_backtester.strategies.rsi_supertrend_strategy import RSISupertrendStrategy, StrategySettings
 
-
+ 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run RSI Supertrend signal generation and backtest")
     parser.add_argument("--config", required=True, help="Path to config JSON")
