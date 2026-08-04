@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import talib
+try:
+    import talib
+except ImportError:
+    talib = None
 
 
 def add_rsi(df: pd.DataFrame, period: int, column_name: str) -> pd.DataFrame:
@@ -24,12 +27,20 @@ def add_rsi(df: pd.DataFrame, period: int, column_name: str) -> pd.DataFrame:
 
 def add_macd(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    macd, signal, hist = talib.MACD(
-        df["close"].astype(float),
-        fastperiod=12,
-        slowperiod=26,
-        signalperiod=9,
-    )
+    if talib is not None:
+        macd, signal, hist = talib.MACD(
+            df["close"].astype(float),
+            fastperiod=12,
+            slowperiod=26,
+            signalperiod=9,
+        )
+    else:
+        ema12 = df["close"].ewm(span=12, adjust=False).mean()
+        ema26 = df["close"].ewm(span=26, adjust=False).mean()
+        macd = ema12 - ema26
+        signal = macd.ewm(span=9, adjust=False).mean()
+        hist = macd - signal
+
     df["MACD"] = macd
     df["Signal"] = signal
     df["Histogram"] = hist
@@ -87,26 +98,31 @@ def add_supertrend(df: pd.DataFrame, period: int = 21, multiplier: float = 1.0) 
     df = df.copy()
     hl2 = (df['high'] + df['low']) / 2
     df = add_atr(df, period)
-    df['final_upperband'] = hl2 + (multiplier * df['ATR'])
-    df['final_lowerband'] = hl2 - (multiplier * df['ATR'])
-    df['in_uptrend'] = True
+    
+    close = df['close'].to_numpy(dtype=float, copy=True)
+    final_upperband = (hl2 + (multiplier * df['ATR'])).to_numpy(dtype=float, copy=True)
+    final_lowerband = (hl2 - (multiplier * df['ATR'])).to_numpy(dtype=float, copy=True)
+    in_uptrend = np.ones(len(df), dtype=bool)
 
-    for current in range(1, len(df.index)):
+    for current in range(1, len(close)):
         previous = current - 1
 
-        if df['close'].iloc[current] > df['final_upperband'].iloc[previous]:
-            df.loc[df.index[current], 'in_uptrend'] = True
-        elif df['close'].iloc[current] < df['final_lowerband'].iloc[previous]:
-            df.loc[df.index[current], 'in_uptrend'] = False
+        if close[current] > final_upperband[previous]:
+            in_uptrend[current] = True
+        elif close[current] < final_lowerband[previous]:
+            in_uptrend[current] = False
         else:
-            df.loc[df.index[current], 'in_uptrend'] = df['in_uptrend'].iloc[previous]
+            in_uptrend[current] = in_uptrend[previous]
 
-            if df['in_uptrend'].iloc[current] and df['final_lowerband'].iloc[current] < df['final_lowerband'].iloc[previous]:
-                df.loc[df.index[current], 'final_lowerband'] = df['final_lowerband'].iloc[previous]
+            if in_uptrend[current] and final_lowerband[current] < final_lowerband[previous]:
+                final_lowerband[current] = final_lowerband[previous]
 
-            if not df['in_uptrend'].iloc[current] and df['final_upperband'].iloc[current] > df['final_upperband'].iloc[previous]:
-                df.loc[df.index[current], 'final_upperband'] = df['final_upperband'].iloc[previous]
+            if not in_uptrend[current] and final_upperband[current] > final_upperband[previous]:
+                final_upperband[current] = final_upperband[previous]
 
+    df['final_upperband'] = final_upperband
+    df['final_lowerband'] = final_lowerband
+    df['in_uptrend'] = in_uptrend
     return df
 
 
@@ -171,5 +187,8 @@ def add_adx(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
 
 def add_ema(df: pd.DataFrame, period: int = 20) -> pd.DataFrame:
     df = df.copy()
-    df[f"ema_{period}"] = talib.EMA(df["close"].astype(float), timeperiod=period)
+    if talib is not None:
+        df[f"ema_{period}"] = talib.EMA(df["close"].astype(float), timeperiod=period)
+    else:
+        df[f"ema_{period}"] = df["close"].ewm(span=period, adjust=False).mean()
     return df

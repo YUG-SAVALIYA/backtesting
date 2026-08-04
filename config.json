@@ -1,6 +1,6 @@
 {
-  "data_dir": "d:/backtesting/backtesting/data",
-  "scanner_data_dir": "d:/backtesting/backtesting/data",
+  "data_dir": "Data",
+  "scanner_data_dir": "Data",
   "output_dir": "./output",
   "companies": [
     "360ONE",

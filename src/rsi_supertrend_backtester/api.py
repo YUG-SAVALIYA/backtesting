@@ -487,19 +487,20 @@ async def run_backtest_endpoint(req: BacktestRequest):
     config = load_config(str(config_path))
     
     if req.companies.strip().upper() == "ALL":
-        csv_path = Path(config.data_dir) / "companies_1yr_daily_candles.csv"
-        try:
-            if csv_path.exists():
-                df_master = pd.read_csv(csv_path, usecols=['symbol'])
-                companies = df_master['symbol'].unique().tolist()
-            else:
-                logger.info(f"{csv_path} not found. Scanning data directory for available companies.")
-                companies = [p.name.split('_')[0] for p in Path(config.data_dir).glob('*_daily.csv')]
-                if not companies:
-                    companies = config.companies
-        except Exception as e:
-            logger.error(f"Failed to load ALL companies from {csv_path}: {e}")
+        symbols = set()
+        data_dir_path = Path(config.data_dir)
+        if data_dir_path.exists():
+            for p in data_dir_path.iterdir():
+                if p.is_file() and p.name.endswith('.csv') and '_' in p.name:
+                    sym = p.name.split('_')[0].strip().upper()
+                    if sym and sym != "COMPANIES":
+                        symbols.add(sym)
+        companies = sorted(list(symbols))
+        if not companies:
+            logger.info(f"No files in {config.data_dir}. Falling back to config.companies ({len(config.companies)} stocks).")
             companies = config.companies
+        else:
+            logger.info(f"Loaded ALL companies from data folder: {len(companies)} unique symbols found.")
     else:
         companies = [c.strip().strip("'\"") for c in req.companies.split(",") if c.strip()]
 
@@ -1102,19 +1103,20 @@ async def start_live_trading(req: LiveTradingRequest, background_tasks: Backgrou
     symbol_map: dict[str, str] = {}
 
     if companies_str == "ALL":
-        # Load the Nifty 500 universe from config.json, then resolve via instrument master
+        # Load all companies available in data folder, or fall back to config.json
         config_path = BASE_DIR / "config.json"
         cfg = load_config(str(config_path))
         
-        csv_path = Path(cfg.data_dir) / "companies_1yr_daily_candles.csv"
-        try:
-            if csv_path.exists():
-                df_master = pd.read_csv(csv_path, usecols=['symbol'])
-                all_symbols = df_master['symbol'].unique().tolist()
-            else:
-                all_symbols = [s.strip().upper() for s in cfg.companies if s.strip()]
-        except Exception as e:
-            logger.error(f"Failed to load ALL companies from {csv_path}: {e}")
+        symbols = set()
+        data_dir_path = Path(cfg.data_dir)
+        if data_dir_path.exists():
+            for p in data_dir_path.iterdir():
+                if p.is_file() and p.name.endswith('.csv') and '_' in p.name:
+                    sym = p.name.split('_')[0].strip().upper()
+                    if sym and sym != "COMPANIES":
+                        symbols.add(sym)
+        all_symbols = sorted(list(symbols))
+        if not all_symbols and cfg.companies:
             all_symbols = [s.strip().upper() for s in cfg.companies if s.strip()]
         for s in all_symbols:
             candidates, is_exact = await instrument_master.resolve_symbol(s)
@@ -1251,20 +1253,28 @@ async def scan_live_trading(req: ScanRequest):
     )
     strategy = RSISupertrendStrategy(settings)
 
-    day_files = sorted(live_dir.glob("*_daily.csv"))
+    loader = MarketDataLoader(live_dir)
+    symbols_to_scan = set()
+    for p in live_dir.iterdir():
+        if p.is_file() and p.name.endswith('.csv') and '_' in p.name:
+            sym = p.name.split('_')[0].strip().upper()
+            if sym and sym != "COMPANIES":
+                if scan_symbols is None or sym in scan_symbols:
+                    symbols_to_scan.add(sym)
+    sorted_symbols = sorted(list(symbols_to_scan))
     
-    def process_file(df_path):
-        symbol = df_path.name.replace("_daily.csv", "")
-        if scan_symbols is not None and symbol not in scan_symbols:
-            return None
-
-        wf_path = live_dir / f"{symbol}_weekly.csv"
-
+    def process_symbol(symbol):
         try:
-            df_day = pd.read_csv(df_path)
-            df_week = pd.read_csv(wf_path) if wf_path.exists() else None
+            try:
+                df_day = loader._read_csv(loader.resolve_timeframe_path(symbol, "daily"), cache=True)
+            except Exception:
+                df_day = loader._read_csv(loader.resolve_timeframe_path(symbol, "Day"), cache=True)
+            try:
+                df_week = loader._read_csv(loader.resolve_timeframe_path(symbol, "weekly"), cache=True)
+            except Exception:
+                df_week = None
 
-            if df_day.empty:
+            if df_day is None or df_day.empty:
                 return None
 
             def _normalize_dt(series):
@@ -1274,7 +1284,7 @@ async def scan_live_trading(req: ScanRequest):
                 return s.dt.tz_localize(None)
 
             df_day["datetime"] = _normalize_dt(df_day["datetime"])
-            if df_week is not None:
+            if df_week is not None and not df_week.empty:
                 df_week["datetime"] = _normalize_dt(df_week["datetime"])
 
             sig_df, _exec_df = strategy.prepare_frames(df_day, df_day, df_week)
@@ -1361,13 +1371,13 @@ async def scan_live_trading(req: ScanRequest):
             }
         except Exception as e:
             import logging
-            logging.error(f"Error scanning {df_path.name}: {e}")
+            logging.error(f"Error scanning {symbol}: {e}")
             return None
 
     loop = asyncio.get_event_loop()
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=64) as executor:
-        tasks = [loop.run_in_executor(executor, process_file, df_path) for df_path in day_files]
+        tasks = [loop.run_in_executor(executor, process_symbol, sym) for sym in sorted_symbols]
         raw_results = await asyncio.gather(*tasks)
 
     results = [res for res in raw_results if res is not None]
